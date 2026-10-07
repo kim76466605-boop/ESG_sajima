@@ -161,7 +161,7 @@ nav button{min-height:44px;font-size:14px}
 <label for="su-p2">비밀번호 확인</label><div class="pw"><input id="su-p2" type="password" autocomplete="new-password"><button type="button" class="eye" data-eye="su-p2" aria-label="비밀번호 보기" aria-pressed="false"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
 <div class="row2"><div><label for="su-a">나이</label><select id="su-a"><option value="o14">만 14세 이상</option><option value="u14">만 14세 미만</option></select></div>
 <div><label for="su-t">우리 동네</label><input id="su-t" placeholder="지도에서 찍으면 채워져요"></div></div>
-<label>지도에서 내 동네 찍기</label><div id="mapSign"></div>
+<label>지도에서 내 동네 찍기</label><div id="mapSign"></div><button type="button" class="btn sm alt" id="geoSign" style="margin-top:10px">현재 위치로 설정</button>
 <p class="hint">지도를 눌러 위치를 찍어 주세요. 정확한 주소가 아니라 약 100m 단위의 대략적인 동네 위치만 저장해요.</p>
 <div id="guard" class="res" hidden style="margin-top:14px">
 <b>보호자 인증 (만 14세 미만 필수)</b>
@@ -320,9 +320,12 @@ const items=[
 {n:"스케치북·색연필(나눔)",t:"미술 학용품 준비물 나눔",o:"예서",d:0.7,p:0,v:10000,c:"상",q:2,l:6,co:2}
 ];
 items.forEach(it=>{it.sample=true});
-const SC=200;
-items.forEach((it,i)=>{const a=i*2.4;it.x=Math.max(30,Math.min(970,500+it.d*SC*Math.cos(a)));it.y=Math.max(50,Math.min(660,350+it.d*SC*Math.sin(a)))});
-function recalcDist(){items.forEach(it=>{if(it.o!=="나")it.d=Math.max(0.1,Math.round(Math.hypot(it.x-me.pos.x,it.y-me.pos.y)/SC*10)/10)})}
+items.forEach((it,i)=>{it.d0=it.d;it.ang=i*2.4});
+function recalcDist(){items.forEach(it=>{
+  if(it.o==="나")return;
+  if(it.sample){it.d=it.d0;it.lat=me.pos.lat+it.d0*Math.cos(it.ang)/111;it.lng=me.pos.lng+it.d0*Math.sin(it.ang)/(111*Math.cos(me.pos.lat*Math.PI/180));return}
+  if(typeof it.lat==="number")it.d=Math.max(0.1,Math.round(km(me.pos,it)*10)/10);
+})}
 const reqs=[
 {n:"카메라 삼각대",who:"수아",days:2,dist:0.7},
 {n:"전동 드릴",who:"건우",days:1,dist:1.1},
@@ -381,7 +384,7 @@ $("#goBorrow").onclick=()=>{
     }else{
       r.slice(0,2).forEach((x,i)=>{
         const it=x.it,cost=it.p*days*n,d=it.v<=20000?0:Math.round(it.v*DEP[it.c]*n);
-        if(i===0){total+=cost;dep+=d;found++;co+=it.co*Math.min(n,it.q);dots.push({x:it.x,y:it.y,n:dots.length+1,name:it.n+" ("+it.o+"님, "+it.d+"km)"})}
+        if(i===0){total+=cost;dep+=d;found++;co+=it.co*Math.min(n,it.q);dots.push({lat:it.lat,lng:it.lng,n:dots.length+1,name:it.n+" ("+it.o+"님, "+it.d+"km)"})}
         h+=`<div class="res ${i===0?"top":""}"><h3><span>${esc(it.n)}</span><span class="pct">${x.sc}% 일치</span></h3>
         <div class="meta">${esc(it.o)}님${it.sample?" (예시)":""} · ${it.d}km · 상태 ${it.c} · 보유 ${it.q}개</div><div class="hint" style="margin:0 0 8px">추천 이유: 이름 일치 ${Math.round(x.ts*100)}% · ${it.d}km · ${it.p?"하루 "+won(it.p):"무료"}</div>
         <span class="tag">${it.p?days+"일 "+won(cost):"나눔(무료)"}</span><span class="tag s">${d?"보증금 "+won(d):"보증금 면제"}</span>
@@ -392,7 +395,7 @@ $("#goBorrow").onclick=()=>{
     }
     out.insertAdjacentHTML("beforeend",h);
   });
-  if(dots.length){out.insertAdjacentHTML("beforeend",'<div class="need">지도에서 보기</div><div id="resMap"></div><p class="hint">'+dots.map(d=>d.n+". "+esc(d.name)).join(" · ")+" · 빨간 핀이 내 위치예요.</p>");drawMap($("#resMap"),me.pos,dots)}
+  if(dots.length){out.insertAdjacentHTML("beforeend",'<div class="need">지도에서 보기</div><div id="resMap"></div><p class="hint">'+dots.map(d=>d.n+". "+esc(d.name)).join(" · ")+" · 빨간 점이 내 위치예요.</p>");drawMap($("#resMap"),me.pos,dots)}
   if(found)out.insertAdjacentHTML("afterbegin",`<div class="res" style="margin-top:18px;background:var(--go-soft)"><b>추천 묶음 ${found}가지</b><br>대여비 합계 ${won(total)} · 보증금 ${won(dep)} (반납 후 돌려받아요)<br><span class="hint">새 물건 ${found}개를 사지 않으면 약 ${co}kg CO₂e를 줄이는 효과예요(예시 추정치). AI 추천은 참고용이며 최종 결정은 직접 해 주세요.</span></div>`);
 };
 $("#borrowOut").onclick=e=>{
@@ -410,7 +413,7 @@ $("#lph").onchange=e=>{
 $("#goLend").onclick=()=>{
   const n=$("#ln").value.trim();
   if(!n){toast("빌려줄 물건 이름을 입력해 주세요");return}
-  const it={n,t:"",o:"나",d:0.1,x:me.pos.x,y:me.pos.y,co:5,p:+$("#lp").value||0,v:+$("#lv").value||0,c:$("#lc").value,q:+$("#lq").value||1,l:0};
+  const it={n,t:"",o:"나",d:0.1,lat:me.pos.lat,lng:me.pos.lng,co:5,p:+$("#lp").value||0,v:+$("#lv").value||0,c:$("#lc").value,q:+$("#lq").value||1,l:0};
   items.push(it);dbItem(it);
   const idx=log.push({n,c:it.c,before:lastPhoto,after:null})-1;
   const m=reqs.map(r=>({r,s:sim(clean(r.n),n)})).filter(x=>x.s>0).sort((a,b)=>b.s-a.s);
@@ -548,7 +551,7 @@ $("#chatOut").onkeydown=e=>{if(e.key==="Enter"&&e.target.id==="ci"&&!e.isComposi
 function send(){const i=$("#ci"),v=i.value.trim();if(!v||!cur||!threads[cur])return;const t=threads[cur];i.value="";say(t.uid,t.name,v);setTimeout(()=>{const x=$("#ci");x&&x.focus()},0)}
 
 /* 프로필 */
-const me={name:"나",town:"우리 동네",pos:{x:500,y:350},email:""};
+const me={name:"나",town:"우리 동네",pos:{lat:37.5665,lng:126.978},email:""};
 const hist=[{type:"교환",item:"책 ↔ 보드게임",who:"하준",co:10,rv:{s:5,t:"약속 시간을 잘 지켜요"}}];
 const got=[{who:"서연",s:5,t:"물건 상태가 깨끗했어요"},{who:"태오",s:4,t:"친절하게 설명해 주셨어요"}];
 function deal(type,item,who,co){hist.unshift({type,item,who,co:co||0,rv:null});if(shown("me"))renderMe()}
@@ -559,7 +562,7 @@ function renderMe(){
   $("#meOut").innerHTML=`<div style="display:flex;gap:14px;align-items:center;margin-top:16px"><div class="av">${esc((me.name||"나")[0])}</div>
   <div style="flex:1"><label for="mn" style="margin-top:0">이름</label><input id="mn" value="${esc(me.name)}"></div></div>
   <label for="mt">우리 동네</label><input id="mt" value="${esc(me.town)}">
-  <label>내 동네 위치 (지도를 눌러 바꿔요)</label><div id="meMap"></div>
+  <label>내 동네 위치 (지도를 눌러 바꿔요)</label><div id="meMap"></div><button type="button" class="btn sm alt" id="geoMe" style="margin-top:10px">현재 위치로 설정</button>
   <label class="chk"><input type="checkbox" id="autoChk" ${getAuto()?"checked":""}>이 기기에서 자동 로그인 (30일)</label>
   <label style="margin-top:18px">나눔 온도 ${temp}°</label><div class="temp"><i style="width:${Math.min(100,(temp-30)*3)}%"></i></div>
   <div class="stats"><div><b>${c("빌림")+c("나눔")}</b>빌린·나눔받은 물건</div><div><b>${c("빌려줌")}</b>빌려준 물건</div><div><b>${c("교환")}</b>교환</div></div>
@@ -568,48 +571,99 @@ function renderMe(){
   ${h.rv?`<span class="tag">★ ${h.rv.s}</span> ${esc(h.rv.t)}`:`<div class="row2"><select aria-label="별점" id="st${i}"><option value="5">★★★★★</option><option value="4">★★★★</option><option value="3">★★★</option><option value="2">★★</option><option value="1">★</option></select><input id="rt${i}" placeholder="후기를 남겨 주세요"></div><button class="btn sm" style="margin-top:8px" data-rv="${i}">리뷰 등록</button>`}</div>`).join("")}
   <h2>내가 등록한 물건</h2>${mine.length?mine.map(i=>`<div class="res"><b>${esc(i.n)}</b><div class="meta">${i.q}개 · 하루 ${won(i.p)} · 상태 ${i.c}</div></div>`).join(""):`<p class="hint">아직 없어요. 빌려주기 탭에서 등록해 보세요.</p>`}
   <h2>받은 후기</h2>${got.map(g=>`<div class="res"><span class="tag">★ ${g.s}</span> ${esc(g.t)}<div class="meta">${esc(g.who)}님</div></div>`).join("")}`;
-  drawMap($("#meMap"),me.pos,[],(x,y)=>{me.pos={x,y};me.town=near(x,y)+" 근처";$("#mt").value=me.town;saveMe();recalcDist();toast("내 동네 위치를 바꿨어요")});
+  drawMap($("#meMap"),me.pos,[],setMyPos);
 }
 $("#meOut").onchange=e=>{if(e.target.id==="autoChk"){if(e.target.checked&&me.email)setAuto(me.email);else clearAuto();toast(e.target.checked?"자동 로그인을 켰어요":"자동 로그인을 껐어요")}};
 $("#meOut").oninput=e=>{if(e.target.id==="mn")me.name=e.target.value;if(e.target.id==="mt")me.town=e.target.value};
 $("#meOut").onclick=e=>{
+  if(e.target.id==="geoMe"){geo(function(la,ln){setMyPos(la,ln);drawMap($("#meMap"),me.pos,[],setMyPos)});return}
   const i=e.target.dataset.rv;if(i===undefined)return;
   hist[i].rv={s:+$("#st"+i).value,t:$("#rt"+i).value.trim()||"좋은 거래였어요"};toast("리뷰를 등록했어요");renderMe();
 };
 badge();
 
-/* 지도 (타일 지도는 외부 요청이 막혀 있어 직접 그린 동네 약도) */
-const LM=[{n:"학교",x:300,y:210},{n:"공원",x:710,y:165},{n:"시장",x:770,y:470},{n:"역",x:240,y:520},{n:"아파트 단지",x:500,y:350}];
-function near(x,y){return LM.map(l=>({n:l.n,d:Math.hypot(l.x-x,l.y-y)})).sort((a,b)=>a.d-b.d)[0].n}
-function mapSVG(pin,dots){
-  const t=(x,y,w)=>`<text x="${x}" y="${y}" text-anchor="middle" font-size="34" font-weight="700" fill="#2f4a3a" font-family="Noto Sans KR,sans-serif">${w}</text>`;
-  return `<svg viewBox="0 0 1000 700" role="img" aria-label="동네 약도" style="width:100%;height:auto;display:block;border:3px solid var(--line);border-radius:16px;background:#e9f4da;cursor:crosshair">
-  <path d="M0 585C220 540 380 650 600 585S880 520 1000 560V640C880 600 720 700 600 670S220 610 0 650Z" fill="#9cc7f5"/>
-  <rect x="590" y="70" width="240" height="170" rx="34" fill="#b9e08a"/>
-  <g fill="#f3ead2"><rect x="60" y="60" width="150" height="100" rx="8"/><rect x="380" y="60" width="150" height="90" rx="8"/><rect x="60" y="400" width="130" height="110" rx="8"/><rect x="380" y="410" width="160" height="110" rx="8"/><rect x="860" y="300" width="100" height="150" rx="8"/></g>
-  <g stroke="#fff" stroke-width="16" fill="none" stroke-linecap="round"><path d="M0 350H1000"/><path d="M500 0V700"/><path d="M280 0V700"/><path d="M0 200C300 240 600 120 1000 190"/><path d="M0 520H1000" stroke-width="12"/></g>
-  <rect x="270" y="190" width="60" height="42" rx="6" fill="#f59e0b" stroke="#0f2a1d" stroke-width="3"/>
-  <rect x="740" y="450" width="60" height="40" rx="6" fill="#e879a8" stroke="#0f2a1d" stroke-width="3"/>
-  <circle cx="240" cy="520" r="20" fill="#2563eb" stroke="#0f2a1d" stroke-width="3"/><rect x="470" y="320" width="60" height="60" rx="6" fill="#c7b9a3" stroke="#0f2a1d" stroke-width="3"/>
-  ${t(300,268,"학교")}${t(710,215,"공원")}${t(770,525,"시장")}${t(240,574,"역")}${t(500,412,"아파트 단지")}${t(150,625,"하천")}
-  ${dots.map(d=>`<g><circle cx="${d.x}" cy="${d.y}" r="24" fill="#2563eb" stroke="#0f2a1d" stroke-width="3"/><text x="${d.x}" y="${d.y+9}" text-anchor="middle" font-size="26" font-weight="900" fill="#fff">${d.n}</text></g>`).join("")}
-  ${pin?`<g transform="translate(${pin.x},${pin.y})"><path d="M0 0C-30-34-26-72 0-72S30-34 0 0Z" fill="#e11d48" stroke="#0f2a1d" stroke-width="4"/><circle cy="-48" r="9" fill="#fff"/></g>`:""}
-  </svg>`;
+/* 지도: 카카오맵. 위치는 소수 셋째 자리(약 100m)로 반올림해서만 저장해요 */
+const KAKAO_KEY="64d8c22778b26e51ec64c099794655b7";
+const DEF_POS={lat:37.5665,lng:126.978};
+let kakaoP=null;
+function roundPos(lat,lng){return{lat:Math.round(lat*1000)/1000,lng:Math.round(lng*1000)/1000}}
+function normPos(p){return p&&typeof p.lat==="number"&&typeof p.lng==="number"?p:DEF_POS}
+function km(a,b){const R=6371,r=Math.PI/180,dLa=(b.lat-a.lat)*r,dLo=(b.lng-a.lng)*r;const h=Math.sin(dLa/2)*Math.sin(dLa/2)+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dLo/2)*Math.sin(dLo/2);return 2*R*Math.asin(Math.sqrt(h))}
+function loadKakao(){
+  if(kakaoP)return kakaoP;
+  kakaoP=new Promise(function(res){
+    if(window.kakao&&window.kakao.maps&&window.kakao.maps.services){res(true);return}
+    const s=document.createElement("script");
+    s.src="https://dapi.kakao.com/v2/maps/sdk.js?appkey="+KAKAO_KEY+"&libraries=services&autoload=false";
+    s.onload=function(){try{window.kakao.maps.load(function(){res(true)})}catch(e){res(false)}};
+    s.onerror=function(){res(false)};
+    setTimeout(function(){res(false)},8000);
+    document.head.appendChild(s);
+  });
+  return kakaoP;
 }
-function drawMap(box,pin,dots,onPick){
+/* 좌표 → "OO동" 같은 동네 이름 */
+async function townName(lat,lng){
+  try{
+    if(!(await loadKakao()))return "";
+    return await new Promise(function(res){
+      new kakao.maps.services.Geocoder().coord2RegionCode(lng,lat,function(r,status){
+        if(status===kakao.maps.services.Status.OK&&r&&r.length){const h=r.find(function(x){return x.region_type==="H"})||r[0];res(h.region_3depth_name||h.region_2depth_name||"")}
+        else res("");
+      });
+    });
+  }catch(e){return ""}
+}
+function geo(cb){
+  if(!navigator.geolocation){toast("이 기기에서는 현재 위치를 쓸 수 없어요");return}
+  navigator.geolocation.getCurrentPosition(function(p){const r=roundPos(p.coords.latitude,p.coords.longitude);cb(r.lat,r.lng)},function(){toast("위치 권한을 허용해 주세요")},{timeout:8000,maximumAge:60000});
+}
+const MAP_FAIL='<div class="empty"><b>지도를 불러오지 못했어요.</b>카카오 개발자 사이트에 이 주소가 등록돼 있는지 확인해 주세요. 지도가 없어도 \'현재 위치로 설정\' 버튼은 쓸 수 있어요.</div>';
+async function drawMap(box,pin,dots,onPick){
   if(!box)return;
-  box.innerHTML=mapSVG(pin,dots||[]);
-  if(!onPick)return;
-  const sv=box.querySelector("svg");
-  sv.onclick=e=>{
-    const r=sv.getBoundingClientRect();if(!r.width)return;
-    const x=Math.max(20,Math.min(980,Math.round((e.clientX-r.left)/r.width*50)*20)),y=Math.max(20,Math.min(680,Math.round((e.clientY-r.top)/r.height*35)*20));
-    onPick(x,y);drawMap(box,{x,y},dots,onPick);
-  };
+  dots=dots||[];
+  const ok=await loadKakao();
+  if(!box.isConnected||box.offsetParent===null)return;
+  if(!ok){box.innerHTML=MAP_FAIL;return}
+  try{
+    let st=box._st;
+    if(!st||!box.contains(st.el)){
+      box.innerHTML="";
+      const el=document.createElement("div");
+      el.style.cssText="width:100%;height:260px;border:3px solid var(--line);border-radius:16px;overflow:hidden";
+      box.appendChild(el);
+      const c=normPos(pin);
+      const map=new kakao.maps.Map(el,{center:new kakao.maps.LatLng(c.lat,c.lng),level:pin?4:6});
+      st=box._st={el:el,map:map,ov:[],onPick:null,dd:[]};
+      kakao.maps.event.addListener(map,"click",function(ev){
+        if(!st.onPick)return;
+        const ll=ev.latLng,p=roundPos(ll.getLat(),ll.getLng());
+        st.onPick(p.lat,p.lng);drawMap(box,p,st.dd,st.onPick);
+      });
+    }
+    st.onPick=onPick||null;st.dd=dots;
+    st.ov.forEach(function(o){o.setMap(null)});st.ov=[];
+    const b=new kakao.maps.LatLngBounds();
+    function add(pos,html){const ll=new kakao.maps.LatLng(pos.lat,pos.lng);st.ov.push(new kakao.maps.CustomOverlay({position:ll,content:html,xAnchor:.5,yAnchor:.5,map:st.map}));b.extend(ll)}
+    dots.forEach(function(d){add(d,'<div style="width:30px;height:30px;border-radius:50%;background:#2563eb;color:#fff;border:3px solid #0f2a1d;display:grid;place-items:center;font:900 14px sans-serif">'+Number(d.n)+'</div>')});
+    if(pin)add(pin,'<div style="width:20px;height:20px;border-radius:50%;background:#e11d48;border:3px solid #fff;box-shadow:0 0 0 2px #0f2a1d"></div>');
+    st.map.relayout();
+    if(dots.length)st.map.setBounds(b,40,40,40,40);
+    else if(pin)st.map.setCenter(new kakao.maps.LatLng(pin.lat,pin.lng));
+  }catch(e){box.innerHTML=MAP_FAIL}
+}
+function setMyPos(lat,lng){
+  me.pos={lat:lat,lng:lng};recalcDist();saveMe();
+  townName(lat,lng).then(function(t){me.town=t?t+" 근처":"내 동네";const i=$("#mt");if(i)i.value=me.town;saveMe()});
+  toast("내 동네 위치를 바꿨어요");
 }
 let pick=null;
-function onPickSign(x,y){pick={x,y};$("#su-t").value=near(x,y)+" 근처"}
-drawMap($("#mapSign"),null,[],onPickSign);
+function onPickSign(lat,lng){
+  pick={lat:lat,lng:lng};$("#su-t").value="";
+  townName(lat,lng).then(function(t){if(pick&&pick.lat===lat&&pick.lng===lng)$("#su-t").value=t?t+" 근처":"선택한 위치"});
+}
+function drawSignMap(){drawMap($("#mapSign"),pick,[],onPickSign)}
+$("#geoSign").onclick=function(){geo(function(la,ln){onPickSign(la,ln);drawSignMap()})};
 
 /* 인트로 · 로그인 · 회원가입 (시연용: 계정은 이 기기 브라우저에만 저장) */
 const mem={};
@@ -624,7 +678,7 @@ function dbRequest(n,q){if(!DB||!me.id)return;sb.from("requests").insert({reques
 function dbSwap(h,w){if(!DB||!me.id)return;sb.from("swaps").insert({owner_id:me.id,have:h,want:w}).then(function(r){if(r.error)toast("교환 글 저장에 실패했어요")})}
 async function dbItem(it){
   if(!DB||!me.id)return;
-  const r=await sb.from("items").insert({owner_id:me.id,name:it.n,tags:it.n,qty:it.q,price_per_day:it.p,value:it.v,condition:it.c,pos_x:me.pos.x,pos_y:me.pos.y,co2_kg:it.co}).select().single();
+  const r=await sb.from("items").insert({owner_id:me.id,name:it.n,tags:it.n,qty:it.q,price_per_day:it.p,value:it.v,condition:it.c,lat:me.pos.lat,lng:me.pos.lng,co2_kg:it.co}).select().single();
   if(r.error){toast("물건 저장에 실패했어요");return}
   it.id=r.data.id;it.db=true;it.ownerId=me.id;
 }
@@ -645,7 +699,7 @@ async function loadAll(){
     const ai=a.data||[],bi=b.data||[],ci=c.data||[];
     const nm=await nicks(Array.from(new Set([].concat(ai.map(x=>x.owner_id),bi.map(x=>x.requester_id),ci.map(x=>x.owner_id)))));
     for(let i=items.length-1;i>=0;i--)if(items[i].db)items.splice(i,1);
-    ai.forEach(x=>{const mine=x.owner_id===me.id;items.push({n:x.name,t:x.tags||"",o:mine?"나":(nm[x.owner_id]||"이웃"),d:0.1,x:x.pos_x==null?500:x.pos_x,y:x.pos_y==null?350:x.pos_y,p:x.price_per_day,v:x.value,c:x.condition,q:x.qty,l:0,co:Number(x.co2_kg)||0,db:true,id:x.id,ownerId:x.owner_id})});
+    ai.filter(x=>x.lat!=null).forEach(x=>{const mine=x.owner_id===me.id;items.push({n:x.name,t:x.tags||"",o:mine?"나":(nm[x.owner_id]||"이웃"),d:0.1,lat:x.lat,lng:x.lng,p:x.price_per_day,v:x.value,c:x.condition,q:x.qty,l:0,co:Number(x.co2_kg)||0,db:true,id:x.id,ownerId:x.owner_id})});
     for(let i=reqs.length-1;i>=0;i--)if(reqs[i].db)reqs.splice(i,1);
     bi.filter(x=>x.requester_id!==me.id).forEach(x=>reqs.unshift({n:x.name+(x.qty>1?" "+x.qty+"개":""),uid:x.requester_id,who:nm[x.requester_id]||"이웃",days:x.days,dist:Number(x.max_distance_km)||2,db:true}));
     for(let i=swaps.length-1;i>=0;i--)if(swaps[i].db)swaps.splice(i,1);
@@ -658,11 +712,12 @@ async function enterDB(user){
   const md=user.user_metadata||{};
   me.id=user.id;
   await loadAll();
-  enter({name:(p&&p.nickname)||md.nickname||"이웃",town:(p&&p.town)||md.town,pos:(p&&p.pos_x!=null)?{x:p.pos_x,y:p.pos_y}:undefined,email:user.email});
+  enter({name:(p&&p.nickname)||md.nickname||"이웃",town:(p&&p.town)||md.town,pos:(p&&p.lat!=null)?{lat:p.lat,lng:p.lng}:undefined,email:user.email});
   startChat().catch(function(){toast("채팅을 불러오지 못했어요")});
+  if(!(p&&p.lat!=null))setTimeout(function(){toast("내 프로필에서 동네 위치를 정해 주세요")},2600);
 }
 function saveMe(){
-  if(DB&&me.id){sb.from("profiles").update({town:me.town,pos_x:me.pos.x,pos_y:me.pos.y}).eq("id",me.id).then(function(){});return}
+  if(DB&&me.id){sb.from("profiles").update({town:me.town,lat:me.pos.lat,lng:me.pos.lng}).eq("id",me.id).then(function(){});return}
   saveMeLocal();
 }
 function saveMeLocal(){if(!me.email)return;const a=users();if(a[me.email]){a[me.email].pos=me.pos;a[me.email].town=me.town;store.set("saji_users",JSON.stringify(a))}}
@@ -670,8 +725,8 @@ function view(v){["intro","auth","app"].forEach(id=>$("#"+id).hidden=id!==v);win
 const EYE=`<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>`,EYEOFF=`<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><path d="M3 3l18 18"/><circle cx="12" cy="12" r="3"/></svg>`;
 function resetEyes(){document.querySelectorAll("[data-eye]").forEach(b=>{$("#"+b.dataset.eye).type="password";b.innerHTML=EYE;b.setAttribute("aria-pressed","false");b.setAttribute("aria-label","비밀번호 보기")})}
 $("#auth").addEventListener("click",e=>{const b=e.target.closest("[data-eye]");if(!b)return;const i=$("#"+b.dataset.eye),show=i.type==="password";i.type=show?"text":"password";b.innerHTML=show?EYEOFF:EYE;b.setAttribute("aria-pressed",String(show));b.setAttribute("aria-label",show?"비밀번호 숨기기":"비밀번호 보기")});
-function setAuth(m){resetEyes();document.querySelectorAll("#aseg button").forEach(b=>b.setAttribute("aria-selected",b.dataset.m===m));$("#fLogin").hidden=m!=="in";$("#fSign").hidden=m!=="up";$("#lgErr").textContent="";$("#suErr").textContent=""}
-function enter(u){me.name=u.name;me.town=u.town||"우리 동네";me.pos=u.pos||{x:500,y:350};me.email=u.email||"";recalcDist();$("#who").textContent=u.name+"님";view("app");toast("환영해요, "+u.name+"님")}
+function setAuth(m){resetEyes();document.querySelectorAll("#aseg button").forEach(b=>b.setAttribute("aria-selected",b.dataset.m===m));$("#fLogin").hidden=m!=="in";$("#fSign").hidden=m!=="up";$("#lgErr").textContent="";$("#suErr").textContent="";if(m==="up")setTimeout(drawSignMap,80)}
+function enter(u){me.name=u.name;me.town=u.town||"우리 동네";me.pos=normPos(u.pos);me.email=u.email||"";recalcDist();$("#who").textContent=u.name+"님";view("app");toast("환영해요, "+u.name+"님")}
 window.__setAuth=setAuth;
 const gd={code:null,exp:0,tries:0,ok:false,name:"",email:"",contact:"",mode:"mail",pending:false};
 function gdReset(){gd.code=null;gd.ok=false;gd.tries=0;gd.pending=false;$("#gdBox").hidden=true;$("#gtBox").hidden=true;$("#gdErr").textContent="";$("#gdState").textContent="";$("#gd-c").value="";$("#gt-pin").value=""}
@@ -728,7 +783,7 @@ $("#doSign").onclick=async()=>{
   if(bad){er.textContent=bad;return}
   await dbReady;
   if(DB){const btn=$("#doSign");btn.disabled=true;try{
-    const r=await sb.auth.signUp({email:em,password:p,options:{data:{nickname:n,town:$("#su-t").value.trim()||"우리 동네",pos_x:pick.x,pos_y:pick.y,is_under14:u14}}});
+    const r=await sb.auth.signUp({email:em,password:p,options:{data:{nickname:n,town:$("#su-t").value.trim()||"우리 동네",lat:pick.lat,lng:pick.lng,is_under14:u14}}});
     if(r.error){const m=dbErr(r.error);er.textContent=/already|registered/i.test(m)?"이미 가입된 이메일이에요. 로그인해 주세요.":/password/i.test(m)?"비밀번호 조건을 확인해 주세요.":/rate|limit/i.test(m)?"잠시 후 다시 시도해 주세요.":"가입에 실패했어요. ("+m.slice(0,80)+")";return}
     $("#su-p").value=$("#su-p2").value="";
     if(!r.data.session){setAuth("in");$("#lgErr").textContent="가입 확인 메일을 보냈어요. 메일의 링크를 누른 뒤 로그인해 주세요.";return}
@@ -738,7 +793,7 @@ $("#doSign").onclick=async()=>{
   all[em]=u;store.set("saji_users",JSON.stringify(all));
   er.textContent="";$("#su-p").value=$("#su-p2").value="";enter(Object.assign({email:em},u));
 };
-$("#logout").onclick=()=>{stopChat();if(DB&&sb)sb.auth.signOut();me.id=null;clearAuto();cur=null;pick=null;drawMap($("#mapSign"),null,[],onPickSign);view("intro")};
+$("#logout").onclick=()=>{stopChat();if(DB&&sb)sb.auth.signOut();me.id=null;clearAuto();cur=null;pick=null;view("intro")};
 store.del("saji_session");
 (async function(){
   await dbReady;
