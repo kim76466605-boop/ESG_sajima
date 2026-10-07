@@ -193,8 +193,55 @@ ul.rules li::before{content:"";position:absolute;left:16px;top:17px;width:11px;h
 .temp{height:10px;border-radius:99px;background:var(--soft);overflow:hidden}.temp i{display:block;height:100%;background:var(--go);border-radius:99px}
 
 /* 알림 */
-.toast{position:fixed;left:50%;bottom:calc(86px + env(safe-area-inset-bottom,0px));transform:translate(-50%,8px);background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:14px;font-weight:600;font-size:14px;max-width:calc(100% - 32px);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:40;box-shadow:var(--float)}
+.toast{position:fixed;left:50%;width:max-content;text-align:center;bottom:calc(86px + env(safe-area-inset-bottom,0px));transform:translate(-50%,8px);background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:14px;font-weight:600;font-size:14px;max-width:calc(100% - 32px);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:40;box-shadow:var(--float)}
 .toast.on{opacity:1;transform:translate(-50%,0)}
+
+
+/* 로딩 화면: 돌고 도는 물건 */
+#splash{position:fixed;inset:0;z-index:200;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .4s ease,visibility .4s}
+#splash.out{opacity:0;visibility:hidden}
+.sp-orb{position:relative;width:216px;height:216px;margin-bottom:22px}
+.sp-ring{position:absolute;inset:0;border:2px dashed #C9D3CC;border-radius:50%;animation:spin 9s linear infinite}
+.sp-spin{position:absolute;inset:0;animation:spin 9s linear infinite}
+.sp-it{position:absolute;width:50px;height:50px;margin:-25px 0 0 -25px;border-radius:50%;background:#fff;border:1.5px solid #E2E6E1;box-shadow:0 4px 12px rgba(20,32,26,.1);display:grid;place-items:center;animation:spin 9s linear infinite reverse}
+.sp-it svg{width:28px;height:28px}
+.sp-center{position:absolute;left:50%;top:50%;width:88px;height:88px;margin:-44px 0 0 -44px;border-radius:50%;background:#E1F1E9;display:grid;place-items:center}
+.sp-center svg{width:60px;height:60px}
+.sp-wm{margin:0;font-size:32px;font-weight:800;letter-spacing:-.05em;color:#1A1F1C}
+.sp-cap{margin:8px 0 0;font-size:14px;color:#66706A}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* 후기 작성 시트 */
+.modal{position:fixed;inset:0;z-index:60;display:flex;align-items:flex-end;justify-content:center}
+.m-back{position:absolute;inset:0;background:rgba(20,26,22,.45);animation:fadein .2s ease}
+.m-box{position:relative;width:100%;max-width:560px;max-height:92vh;max-height:92dvh;overflow-y:auto;background:var(--surface);border-radius:24px 24px 0 0;padding:10px 20px calc(18px + env(safe-area-inset-bottom,0px));animation:sheetup .28s cubic-bezier(.2,.8,.2,1)}
+.m-grip{width:40px;height:4px;border-radius:99px;background:var(--line);margin:0 auto 14px}
+.m-box h2{margin:0;font-size:20px;font-weight:800;letter-spacing:-.03em}
+.stars{display:flex;justify-content:center;gap:4px;margin:18px 0 2px}
+.stars button{width:50px;height:50px;border:0;background:none;padding:0;cursor:pointer;color:#DCE1DC;border-radius:12px}
+.stars button svg{width:42px;height:42px;fill:currentColor;transition:transform .12s ease}
+.stars button.on{color:#F5B731}
+.stars button:active svg{transform:scale(.88)}
+.stars-t{text-align:center;font-weight:700;font-size:15px;margin:0 0 4px;min-height:24px}
+.tagpick{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:8px 13px;font-size:14px;font-weight:600;color:var(--ink);cursor:pointer}
+.chip[aria-pressed=true]{background:var(--go-soft);border-color:var(--go);color:var(--go-text)}
+textarea{display:block;width:100%;min-height:88px;padding:12px 14px;border:1px solid transparent;border-radius:12px;background:var(--soft);color:var(--ink);font:inherit;font-size:16px;line-height:1.5;resize:vertical}
+textarea:focus{outline:none;border-color:var(--go);background:var(--surface);box-shadow:0 0 0 3px var(--go-soft)}
+.m-box .btn.ghost{margin-top:6px}
+@keyframes sheetup{from{transform:translateY(48px);opacity:.5}to{transform:none;opacity:1}}
+@keyframes fadein{from{opacity:0}}
+
+/* 후기 표시 */
+.st5{display:inline-flex;gap:1px;vertical-align:middle;margin-right:6px}
+.st5 svg{width:15px;height:15px;fill:#DCE1DC}
+.st5 svg.on{fill:#F5B731}
+.rate{color:#B7791F;font-weight:700}
+.rvsum{display:flex;align-items:center;gap:16px}
+.rvsum .big{font-size:30px;font-weight:800;letter-spacing:-.03em;white-space:nowrap}
+.rvsum .big small{font-size:15px;color:var(--mute);font-weight:600}
+.rvsum>div:last-child{flex:1;min-width:0;text-align:left}
+.rvbody{margin:6px 0 0;font-size:14px;line-height:1.55}
 
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 .intro .btn{margin-top:14px}
@@ -220,6 +267,10 @@ input[type=checkbox]:focus{box-shadow:none}
 </style>
 </head>
 <body>
+<div id="splash" role="status" aria-label="사지 마! 불러오는 중">
+<div class="sp-orb" aria-hidden="true"><div class="sp-ring"></div><div class="sp-center"><svg viewBox="0 0 64 64"><g transform="rotate(28 34 34)"><path fill="#0C7C5E" fill-rule="evenodd" d="M24 23h26a6 6 0 0 1 6 6v10a6 6 0 0 1-6 6H24l-11-11z M25.5 34a3.5 3.5 0 1 0-7 0a3.5 3.5 0 1 0 7 0z"/></g><path d="M23.4 28.4C15 27 9 21 10.5 14.5 12 8.5 19.5 6 25.5 9.5" fill="none" stroke="#1A1F1C" stroke-width="3" stroke-linecap="round"/><path d="M20.6 6.2l5.2 3.5-4.2 4.4" fill="none" stroke="#1A1F1C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="sp-spin"><div class="sp-it" style="left:50%;top:0%"><svg viewBox="0 0 32 32"><path d="M4 26L16 7l12 19z" fill="#16A34A"/><path d="M16 7l-4 19h8z" fill="#FDE68A"/></svg></div><div class="sp-it" style="left:100%;top:50%"><svg viewBox="0 0 32 32"><rect x="5" y="9" width="18" height="8" rx="3" fill="#F59E0B"/><rect x="23" y="11" width="6" height="3" rx="1" fill="#94A3B8"/><path d="M10 17l-2 9h6l1-9z" fill="#334155"/></svg></div><div class="sp-it" style="left:50%;top:100%"><svg viewBox="0 0 32 32"><path d="M12 9V7a4 4 0 0 1 8 0v2" stroke="#475569" stroke-width="2.2" fill="none"/><rect x="9" y="9" width="14" height="15" rx="4" fill="#FCD34D"/><rect x="8" y="23" width="16" height="4" rx="1.5" fill="#475569"/></svg></div><div class="sp-it" style="left:0%;top:50%"><svg viewBox="0 0 32 32"><path d="M6 7h9a3 3 0 0 1 3 3v16a2 2 0 0 0-2-2H6z" fill="#60A5FA"/><path d="M26 7h-9a3 3 0 0 0-3 3v16a2 2 0 0 1 2-2h10z" fill="#93C5FD"/></svg></div></div></div>
+<p class="sp-wm">사지 마!</p><p class="sp-cap">우리 동네 물건이 돌고 있어요</p>
+</div>
 <div id="intro" class="intro"><div class="intro-in">
 <div class="hang"><div class="bigtag">
 <h1 class="big-t">사지 마!</h1>
@@ -367,10 +418,34 @@ input[type=checkbox]:focus{box-shadow:none}
 <section class="panel" id="me" hidden><div id="meOut"></div></section>
 </div>
 </div>
+<div id="rvSheet" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="rvTitle">
+<div class="m-back" data-close></div>
+<div class="m-box">
+<div class="m-grip" aria-hidden="true"></div>
+<h2 id="rvTitle">거래는 어땠나요?</h2>
+<p class="hint" style="margin-top:4px">후기는 상대방 프로필에 내 이름과 함께 보여요.</p>
+<div class="stars" id="rvStars" role="radiogroup" aria-label="별점"><button type="button" role="radio" aria-checked="false" data-s="1" aria-label="1점"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3L2.9 9.5l6.3-.9z"/></svg></button><button type="button" role="radio" aria-checked="false" data-s="2" aria-label="2점"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3L2.9 9.5l6.3-.9z"/></svg></button><button type="button" role="radio" aria-checked="false" data-s="3" aria-label="3점"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3L2.9 9.5l6.3-.9z"/></svg></button><button type="button" role="radio" aria-checked="false" data-s="4" aria-label="4점"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3L2.9 9.5l6.3-.9z"/></svg></button><button type="button" role="radio" aria-checked="false" data-s="5" aria-label="5점"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3L2.9 9.5l6.3-.9z"/></svg></button></div>
+<p class="stars-t" id="rvStarT">별을 눌러 주세요</p>
+<p class="lab" id="rvTagLab">어떤 점이 좋았나요? (여러 개 고를 수 있어요)</p>
+<div class="tagpick" id="rvTags"></div>
+<label for="rvItem">거래한 물건</label><input id="rvItem" maxlength="60" placeholder="예: 4인용 텐트">
+<label for="rvText">자세한 후기 (선택)</label><textarea id="rvText" maxlength="200" rows="3" placeholder="거래하면서 좋았던 점이나 아쉬웠던 점을 적어 주세요"></textarea>
+<div class="err" id="rvErr" role="alert"></div>
+<button class="btn" id="rvSend">후기 남기기</button>
+<button class="btn ghost" data-close>나중에 쓸게요</button>
+</div></div>
 <div class="toast" id="toast" role="status"></div>
 
 <script>
 /* 화면 전환 전용(ES5): 아래 메인 스크립트에 문제가 생겨도 인트로·로그인·회원가입 화면은 넘어가게 해요 */
+(function(){
+  var done=false,now=function(){try{return performance.now()}catch(e){return 0}};
+  window.__hideSplash=function(){
+    if(done)return;done=true;var el=document.getElementById("splash");if(!el)return;
+    setTimeout(function(){el.className="out";setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el)},450)},Math.max(0,1500-now()));
+  };
+  setTimeout(window.__hideSplash,4000);
+})();
 (function(){
   var g=function(i){return document.getElementById(i)};
   try{var l=document.createElement("link");l.rel="stylesheet";l.href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css";document.head.appendChild(l)}catch(e){}
@@ -425,6 +500,9 @@ const items=[
 {n:"스케치북·색연필(나눔)",t:"미술 학용품 준비물 나눔",o:"예서",d:0.7,p:0,v:10000,c:"상",q:2,l:6,co:2}
 ];
 items.forEach(it=>{it.sample=true});
+const SAMPLE_RATE={"하늘":[4.9,12],"도윤":[4.8,8],"서연":[5.0,3],"지후":[4.6,5],"민아":[4.9,15],"태오":[4.2,4],"예린":[4.7,6],"유나":[4.9,9],"하준":[4.8,7],"지안":[5.0,2],"예서":[4.6,3]};
+const rates={};
+function rateOf(it){let a=null;if(it.sample&&SAMPLE_RATE[it.o])a=SAMPLE_RATE[it.o];else if(it.ownerId&&rates[it.ownerId]){const r=rates[it.ownerId];a=[r[0]/r[1],r[1]]}return a?` <span class="rate">★ ${a[0].toFixed(1)}</span>(${a[1]})`:""}
 items.forEach((it,i)=>{it.d0=it.d;it.ang=i*2.4});
 function recalcDist(){items.forEach(it=>{
   if(it.o==="나")return;
@@ -491,7 +569,7 @@ $("#goBorrow").onclick=()=>{
         const it=x.it,cost=it.p*days*n,d=it.v<=20000?0:Math.round(it.v*DEP[it.c]*n);
         if(i===0){total+=cost;dep+=d;found++;co+=it.co*Math.min(n,it.q);dots.push({lat:it.lat,lng:it.lng,n:dots.length+1,name:it.n+" ("+it.o+"님, "+it.d+"km)"})}
         h+=`<div class="res ${i===0?"top":""}"><h3><span>${esc(it.n)}</span><span class="pct">${x.sc}% 일치</span></h3>
-        <div class="meta">${esc(it.o)}님${it.sample?" (예시)":""} · ${it.d}km · 상태 ${it.c} · 보유 ${it.q}개</div><div class="hint" style="margin:0 0 8px">추천 이유: 이름 일치 ${Math.round(x.ts*100)}% · ${it.d}km · ${it.p?"하루 "+won(it.p):"무료"}</div>
+        <div class="meta">${esc(it.o)}님${rateOf(it)}${it.sample?" (예시)":""} · ${it.d}km · 상태 ${it.c} · 보유 ${it.q}개</div><div class="hint" style="margin:0 0 8px">추천 이유: 이름 일치 ${Math.round(x.ts*100)}% · ${it.d}km · ${it.p?"하루 "+won(it.p):"무료"}</div>
         <span class="tag">${it.p?days+"일 "+won(cost):"나눔(무료)"}</span><span class="tag s">${d?"보증금 "+won(d):"보증금 면제"}</span>
         ${i===0?'<span class="tag">가장 알맞음</span>':""}
         ${n>it.q?`<p class="hint">요청 ${n}개 중 ${it.q}개만 가능해요.</p>`:""}
@@ -505,7 +583,7 @@ $("#goBorrow").onclick=()=>{
 };
 $("#borrowOut").onclick=e=>{
   const a=e.target.dataset;
-  if(a.ask!==undefined){const it=items[+a.ask];it.l++;dbDeal(it);deal(it.p?"빌림":"나눔",it.n,it.o,it.co);say(it.db?it.ownerId:null,it.o,`안녕하세요! "${it.n}" 빌리고 싶어요.`);toast(`${it.o}님께 신청했어요. 채팅에서 이어가세요`)}
+  if(a.ask!==undefined){const it=items[+a.ask];it.l++;dbDeal(it);deal(it.p?"빌림":"나눔",it.n,it.o,it.co,it.db?it.ownerId:null);say(it.db?it.ownerId:null,it.o,`안녕하세요! "${it.n}" 빌리고 싶어요.`);toast(`${it.o}님께 신청했어요. 채팅에서 이어가세요`)}
   if(a.req){const[n,q]=a.req.split("|");reqs.unshift({n:q>1?n+" "+q+"개":n,who:"나",days:+$("#days").value||1,dist:+$("#dist").value||2});dbRequest(n,+q||1);toast("대여 요청을 등록했어요");e.target.disabled=true;e.target.textContent="등록됨"}
 };
 
@@ -533,7 +611,7 @@ $("#lendOut").onchange=e=>{
   const f=e.target.files[0];if(!f)return;
   const r=new FileReader();r.onload=()=>{$("#aft"+i).innerHTML=`<img alt="반납 후 사진" src="${r.result}">`;toast("두 사진을 나란히 비교해 보세요")};r.readAsDataURL(f);
 };
-$("#lendOut").onclick=e=>{if(e.target.dataset.ok){const w=e.target.dataset.ok,u=e.target.dataset.uid||null;deal("빌려줌",$("#ln").value.trim(),w);say(u,w,`"${$("#ln").value.trim()}" 빌려드릴 수 있어요!`);toast(w+"님에게 전달했어요. 채팅에서 이어가세요")}};
+$("#lendOut").onclick=e=>{if(e.target.dataset.ok){const w=e.target.dataset.ok,u=e.target.dataset.uid||null;deal("빌려줌",$("#ln").value.trim(),w,0,u);say(u,w,`"${$("#ln").value.trim()}" 빌려드릴 수 있어요!`);toast(w+"님에게 전달했어요. 채팅에서 이어가세요")}};
 
 /* 교환 */
 $("#goSwap").onclick=()=>{
@@ -547,7 +625,7 @@ $("#goSwap").onclick=()=>{
   $("#swapOut").innerHTML=`<h2>교환 후보 ${m.length}명</h2>`+o;
   $("#postSwap").onclick=()=>{swaps.unshift({have:h,want:w,who:"나"});dbSwap(h,w);toast("교환 글을 올렸어요");$("#postSwap").disabled=true};
 };
-$("#swapOut").onclick=e=>{const w=e.target.dataset.sw;if(!w)return;const u=e.target.dataset.uid||null,x=$("#sh").value+" ↔ "+$("#sw").value;deal("교환",x,w,10);say(u,w,`교환 제안드려요: ${x}`);toast(w+"님에게 제안했어요. 채팅에서 이어가세요")};
+$("#swapOut").onclick=e=>{const w=e.target.dataset.sw;if(!w)return;const u=e.target.dataset.uid||null,x=$("#sh").value+" ↔ "+$("#sw").value;deal("교환",x,w,10,u);say(u,w,`교환 제안드려요: ${x}`);toast(w+"님에게 제안했어요. 채팅에서 이어가세요")};
 
 /* 인기 */
 function renderHot(){
@@ -628,7 +706,7 @@ function renderChat(){
   if(t.u&&t.uid)markRead(t.uid);
   t.u=0;badge();
   const risk=t.m.slice(-2).some(x=>x[0]==="them"&&RISK.test(x[1]));
-  o.innerHTML=`<div class="chathd"><button class="btn sm ghost" id="back" aria-label="채팅 목록으로">목록</button><b>${esc(t.name)}님</b><button class="btn sm line" id="rp" style="margin-left:auto">신고·차단</button></div>
+  o.innerHTML=`<div class="chathd"><button class="btn sm ghost" id="back" aria-label="채팅 목록으로">목록</button><b>${esc(t.name)}님</b><button class="btn sm alt" id="rvChat" style="margin-left:auto">후기</button><button class="btn sm line" id="rp">신고·차단</button></div>
   ${risk?`<div class="empty" style="margin-top:12px"><b>안전 알림</b>앱 밖 송금이나 링크 요청은 사기일 수 있어요. 보증금과 거래는 앱 안에서만 진행하세요.</div>`:""}
   <div class="msgs" id="msgs">${t.m.length?t.m.map(x=>`<div class="m ${x[0]}">${esc(x[1])}</div>`).join(""):'<p class="hint">첫 메시지를 보내 보세요.</p>'}</div>
   <div class="send"><label for="ci" style="position:absolute;left:-9999px">메시지</label><input id="ci" placeholder="메시지 입력" maxlength="500" autocomplete="off"><button class="btn" id="cs">보내기</button></div>
@@ -651,15 +729,20 @@ $("#chatOut").onclick=e=>{
   if(id==="back"){cur=null;renderChat()}
   if(id==="cs")send();
   if(id==="rp")reportBlock();
+  if(id==="rvChat"){const t=threads[cur];if(!t)return;const h=hist.find(x=>x.who===t.name&&!x.rv);openReview({i:h?hist.indexOf(h):null,who:t.name,uid:t.uid,item:h?h.item:"",type:h?h.type:"거래"})}
 };
 $("#chatOut").onkeydown=e=>{if(e.key==="Enter"&&e.target.id==="ci"&&!e.isComposing)send()};
 function send(){const i=$("#ci"),v=i.value.trim();if(!v||!cur||!threads[cur])return;const t=threads[cur];i.value="";say(t.uid,t.name,v);setTimeout(()=>{const x=$("#ci");x&&x.focus()},0)}
 
 /* 프로필 */
 const me={name:"나",town:"우리 동네",pos:{lat:37.5665,lng:126.978},email:""};
-const hist=[{type:"교환",item:"책 ↔ 보드게임",who:"하준",co:10,rv:{s:5,t:"약속 시간을 잘 지켜요"}}];
-const got=[{who:"서연",s:5,t:"물건 상태가 깨끗했어요"},{who:"태오",s:4,t:"친절하게 설명해 주셨어요"}];
-function deal(type,item,who,co){hist.unshift({type,item,who,co:co||0,rv:null});if(shown("me"))renderMe()}
+const hist=[{type:"교환",item:"책 ↔ 보드게임",who:"하준",uid:null,co:10,rv:{s:5,tags:["약속 시간을 잘 지켜요"],t:"약속 시간을 잘 지켜 주셨어요"}}];
+const got=[{who:"서연",s:5,tags:["물건 상태가 좋아요","반납이 깔끔해요"],t:"빌려 간 랜턴을 깨끗하게 돌려주셨어요",at:"10월 3일"},{who:"태오",s:4,tags:["친절해요"],t:"사용법을 친절하게 물어보셨어요",at:"9월 28일"}];
+const wrote=new Map();
+function deal(type,item,who,co,uid){hist.unshift({type,item,who,uid:uid||null,co:co||0,rv:null});if(shown("me"))renderMe()}
+const fmtDate=s=>{const d=new Date(s);return isNaN(d)?"":(d.getMonth()+1)+"월 "+d.getDate()+"일"};
+const STAR='<svg viewBox="0 0 24 24" aria-hidden="true" class="ON"><path d="M12 2.8l2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3L2.9 9.5l6.3-.9z"/></svg>';
+function stars5(n){let h="";for(let i=1;i<=5;i++)h+=STAR.replace("ON",i<=n?"on":"");return`<span class="st5" role="img" aria-label="별점 ${n}점">${h}</span>`}
 function renderMe(){
   const c=k=>hist.filter(h=>h.type===k).length,saved=c("빌림")+c("나눔")+c("교환"),co=hist.reduce((a,h)=>a+(h.co||0),0);
   const temp=Math.min(99,36.5+hist.length*0.4+got.length*0.5).toFixed(1);
@@ -672,10 +755,10 @@ function renderMe(){
   <label style="margin-top:18px">나눔 온도 ${temp}°</label><div class="temp"><i style="width:${Math.min(100,(temp-30)*3)}%"></i></div></div>
   <div class="stats"><div><b>${c("빌림")+c("나눔")}</b>빌린·나눔받은 물건</div><div><b>${c("빌려줌")}</b>빌려준 물건</div><div><b>${c("교환")}</b>교환</div></div>
   <div class="res top"><b>새 물건 ${saved}개를 사지 않았어요.</b><div class="meta">추정 ${co}kg CO₂e 절감 (예시 계수, 공개 자료로 교체 예정)</div></div>
-  <h2>내 거래 내역</h2>${hist.map((h,i)=>`<div class="res"><h3><span>${esc(h.item)}</span><span class="tag">${h.type}</span></h3><div class="meta">${esc(h.who)}님과 거래</div>
-  ${h.rv?`<span class="tag">★ ${h.rv.s}</span> ${esc(h.rv.t)}`:`<div class="row2"><select aria-label="별점" id="st${i}"><option value="5">★★★★★</option><option value="4">★★★★</option><option value="3">★★★</option><option value="2">★★</option><option value="1">★</option></select><input id="rt${i}" placeholder="후기를 남겨 주세요"></div><button class="btn sm" style="margin-top:8px" data-rv="${i}">리뷰 등록</button>`}</div>`).join("")}
+  <h2>내 거래 내역</h2>${hist.length?hist.map((h,i)=>`<div class="res"><h3><span>${esc(h.item)}</span><span class="tag">${esc(h.type)}</span></h3><div class="meta">${esc(h.who)}님과 거래</div>
+  ${h.rv?`<div>${stars5(h.rv.s)}${(h.rv.tags||[]).map(x=>`<span class="tag">${esc(x)}</span>`).join("")}</div>${h.rv.t?`<p class="rvbody">${esc(h.rv.t)}</p>`:""}<p class="hint" style="margin-top:6px">내가 남긴 후기예요</p>`:`<button class="btn sm alt" data-rv="${i}">후기 쓰기</button>`}</div>`).join(""):`<p class="hint">아직 거래가 없어요. 빌리기 탭에서 이웃의 물건을 찾아보세요.</p>`}
   <h2>내가 등록한 물건</h2>${mine.length?mine.map(i=>`<div class="res"><b>${esc(i.n)}</b><div class="meta">${i.q}개 · 하루 ${won(i.p)} · 상태 ${i.c}</div></div>`).join(""):`<p class="hint">아직 없어요. 빌려주기 탭에서 등록해 보세요.</p>`}
-  <h2>받은 후기</h2>${got.map(g=>`<div class="res"><span class="tag">★ ${g.s}</span> ${esc(g.t)}<div class="meta">${esc(g.who)}님</div></div>`).join("")}`;
+  <h2>받은 후기</h2>${rvSummary()}${got.map(g=>`<div class="res"><div>${stars5(g.s)}${(g.tags||[]).map(x=>`<span class="tag">${esc(x)}</span>`).join("")}</div>${g.t?`<p class="rvbody">${esc(g.t)}</p>`:""}<div class="meta" style="margin:6px 0 0">${esc(g.who)}님${g.at?" · "+esc(g.at):""}</div></div>`).join("")}`;
   drawMap($("#meMap"),me.pos,[],setMyPos);
 }
 $("#meOut").onchange=e=>{if(e.target.id==="autoChk"){if(e.target.checked&&me.email)setAuto(me.email);else clearAuto();toast(e.target.checked?"자동 로그인을 켰어요":"자동 로그인을 껐어요")}};
@@ -684,8 +767,60 @@ $("#townBtn").onclick=()=>{const b=document.querySelector('nav button[data-t="me
 $("#meOut").onclick=e=>{
   if(e.target.id==="geoMe"){geo(function(la,ln){setMyPos(la,ln);drawMap($("#meMap"),me.pos,[],setMyPos)});return}
   const i=e.target.dataset.rv;if(i===undefined)return;
-  hist[i].rv={s:+$("#st"+i).value,t:$("#rt"+i).value.trim()||"좋은 거래였어요"};toast("리뷰를 등록했어요");renderMe();
+  const h=hist[+i];if(h)openReview({i:+i,who:h.who,uid:h.uid||null,item:h.item,type:h.type});
 };
+function rvSummary(){
+  if(!got.length)return '<p class="hint">아직 받은 후기가 없어요. 거래를 마치면 이웃이 후기를 남길 수 있어요.</p>';
+  const avg=got.reduce((a,g)=>a+g.s,0)/got.length,tc={};
+  got.forEach(g=>(g.tags||[]).forEach(x=>tc[x]=(tc[x]||0)+1));
+  const top=Object.entries(tc).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  return `<div class="res rvsum"><div class="big">★ ${avg.toFixed(1)}<small> / 5</small></div><div><b>후기 ${got.length}개</b><div style="margin-top:4px">${top.map(([k,n])=>`<span class="tag">${esc(k)} ${n}</span>`).join("")}</div></div></div>`;
+}
+
+/* 후기 작성 */
+const RV_GOOD=["약속 시간을 잘 지켜요","친절해요","물건 상태가 좋아요","설명이 정확해요","반납이 깔끔해요"],RV_BAD=["약속 시간을 안 지켰어요","설명과 상태가 달라요","응답이 느려요","반납이 늦었어요"],RV_T=["","별로였어요","아쉬웠어요","보통이었어요","좋았어요","최고였어요"];
+let rvCtx=null,rvS=0,rvTags=new Set(),rvLast=null;
+function rvDraw(){
+  document.querySelectorAll("#rvStars button").forEach(b=>{const n=+b.dataset.s;b.classList.toggle("on",n<=rvS);b.setAttribute("aria-checked",String(n===rvS))});
+  $("#rvStarT").textContent=rvS?RV_T[rvS]:"별을 눌러 주세요";
+  const bad=rvS>0&&rvS<=2,set=bad?RV_BAD:RV_GOOD;
+  rvTags.forEach(x=>{if(!set.includes(x))rvTags.delete(x)});
+  $("#rvTagLab").textContent=(bad?"어떤 점이 아쉬웠나요?":"어떤 점이 좋았나요?")+" (여러 개 고를 수 있어요)";
+  $("#rvTags").innerHTML=set.map(x=>`<button type="button" class="chip" aria-pressed="${rvTags.has(x)}" data-tag="${esc(x)}">${esc(x)}</button>`).join("");
+}
+function openReview(c){
+  rvCtx=c;rvS=0;rvTags=new Set();rvLast=document.activeElement;
+  $("#rvTitle").textContent=c.who+"님과의 거래는 어땠나요?";$("#rvItem").value=c.item||"";$("#rvText").value="";$("#rvErr").textContent="";
+  rvDraw();$("#rvSheet").hidden=false;document.body.style.overflow="hidden";
+  setTimeout(()=>{const b=document.querySelector("#rvStars button");if(b)b.focus()},60);
+}
+function closeReview(){$("#rvSheet").hidden=true;document.body.style.overflow="";rvCtx=null;try{if(rvLast&&rvLast.isConnected)rvLast.focus()}catch(e){}}
+$("#rvSheet").onclick=e=>{
+  if(e.target.closest("[data-close]")){closeReview();return}
+  const s=e.target.closest("[data-s]");if(s){rvS=+s.dataset.s;$("#rvErr").textContent="";rvDraw();return}
+  const tg=e.target.closest("[data-tag]");if(tg){const x=tg.dataset.tag;if(rvTags.has(x))rvTags.delete(x);else rvTags.add(x);tg.setAttribute("aria-pressed",String(rvTags.has(x)));return}
+  if(e.target.id==="rvSend")sendReview();
+};
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("#rvSheet").hidden)closeReview()});
+async function sendReview(){
+  const c=rvCtx;if(!c)return;const er=$("#rvErr");
+  if(!rvS){er.textContent="별점을 골라 주세요.";return}
+  const item=$("#rvItem").value.trim().slice(0,60)||"물건",rv={s:rvS,tags:Array.from(rvTags),t:$("#rvText").value.trim().slice(0,200)};
+  const server=!!(DB&&me.id&&c.uid);
+  if(server){
+    const btn=$("#rvSend");btn.disabled=true;
+    try{
+      const r=await sb.from("reviews").insert({reviewer_id:me.id,reviewee_id:c.uid,kind:String(c.type||"거래").slice(0,10),item:item,rating:rv.s,tags:rv.tags,body:rv.t});
+      if(r.error){er.textContent=r.error.code==="23505"?"이 물건에는 이미 후기를 남겼어요.":/row-level|policy|permission/i.test(r.error.message||"")?"대화를 나눈 이웃에게만 후기를 남길 수 있어요.":/relation|does not exist|schema/i.test(r.error.message||"")?"서버에 후기 테이블이 아직 없어요. reviews.sql을 실행해 주세요.":"후기를 저장하지 못했어요. 잠시 후 다시 시도해 주세요.";return}
+      wrote.set(c.uid+"|"+item,rv);
+    }catch(x){er.textContent="서버에 연결하지 못했어요. 잠시 후 다시 시도해 주세요.";return}
+    finally{btn.disabled=false}
+  }
+  const h=c.i!=null&&hist[c.i]?hist[c.i]:hist.find(x=>x.who===c.who&&!x.rv);
+  if(h){h.rv=rv;h.item=item}else hist.unshift({type:c.type||"거래",item:item,who:c.who,uid:c.uid||null,co:0,rv:rv});
+  closeReview();toast(server?"후기를 남겼어요":"후기를 남겼어요 (시연 모드라 이 기기에서만 보여요)");
+  if(shown("me"))renderMe();
+}
 badge();
 
 /* 지도: 카카오맵. 위치는 소수 셋째 자리(약 100m)로 반올림해서만 저장해요 */
@@ -817,6 +952,22 @@ async function loadAll(){
     bi.filter(x=>x.requester_id!==me.id).forEach(x=>reqs.unshift({n:x.name+(x.qty>1?" "+x.qty+"개":""),uid:x.requester_id,who:nm[x.requester_id]||"이웃",days:x.days,dist:Number(x.max_distance_km)||2,db:true}));
     for(let i=swaps.length-1;i>=0;i--)if(swaps[i].db)swaps.splice(i,1);
     ci.filter(x=>x.owner_id!==me.id).forEach(x=>swaps.unshift({have:x.have,want:x.want,uid:x.owner_id,who:nm[x.owner_id]||"이웃",db:true}));
+    const owners=Array.from(new Set(ai.map(x=>x.owner_id)));
+    for(const k in rates)delete rates[k];
+    if(owners.length){const rv=await sb.from("reviews").select("reviewee_id,rating").in("reviewee_id",owners).limit(1000);(rv.data||[]).forEach(r=>{const a=rates[r.reviewee_id]||(rates[r.reviewee_id]=[0,0]);a[0]+=r.rating;a[1]++})}
+  }catch(e){}
+}
+async function loadReviews(){
+  got.length=0;hist.length=0;wrote.clear();
+  try{
+    const r=await sb.from("reviews").select("*").eq("reviewee_id",me.id).order("created_at",{ascending:false}).limit(50);
+    const w=await sb.from("reviews").select("reviewee_id,item,rating,tags,body").eq("reviewer_id",me.id).limit(300);
+    const d=await sb.from("deals").select("id,kind,lender_id,borrower_id,created_at,items(name)").or("lender_id.eq."+me.id+",borrower_id.eq."+me.id).order("created_at",{ascending:false}).limit(50);
+    const rows=r.data||[],dl=d.data||[];
+    (w.data||[]).forEach(x=>wrote.set(x.reviewee_id+"|"+x.item,{s:x.rating,tags:x.tags||[],t:x.body||""}));
+    const nm=await nicks(Array.from(new Set(rows.map(x=>x.reviewer_id).concat(dl.map(x=>x.lender_id===me.id?x.borrower_id:x.lender_id)))));
+    rows.forEach(x=>got.push({who:nm[x.reviewer_id]||"이웃",s:x.rating,tags:x.tags||[],t:x.body||"",at:fmtDate(x.created_at)}));
+    dl.forEach(x=>{const lend=x.lender_id===me.id,o=lend?x.borrower_id:x.lender_id,it=(x.items&&x.items.name)||"물건";hist.push({type:lend?"빌려줌":x.kind,item:it,who:nm[o]||"이웃",uid:o,co:0,rv:wrote.get(o+"|"+it)||null})});
   }catch(e){}
 }
 async function enterDB(user){
@@ -825,6 +976,7 @@ async function enterDB(user){
   const md=user.user_metadata||{};
   me.id=user.id;
   await loadAll();
+  await loadReviews();
   enter({name:(p&&p.nickname)||md.nickname||"이웃",town:(p&&p.town)||md.town,pos:(p&&p.lat!=null)?{lat:p.lat,lng:p.lng}:undefined,email:user.email});
   startChat().catch(function(){toast("채팅을 불러오지 못했어요")});
   if(!(p&&p.lat!=null))setTimeout(function(){toast("내 프로필에서 동네 위치를 정해 주세요")},2600);
@@ -917,7 +1069,7 @@ store.del("saji_session");
   }
   {const mh=$("#modeHint");if(mh)mh.textContent="시연용 모드예요. 계정 정보는 이 기기의 브라우저에만 저장돼요. ["+(dbWhy||"서버 미연결")+"] ("+APPV+")"}
   const em=getAuto(),u=em&&users()[em];if(u)enter(Object.assign({email:em},u));else clearAuto();
-})();
+})().finally(function(){if(window.__hideSplash)window.__hideSplash()});
 })();
 </script>
 </body>
