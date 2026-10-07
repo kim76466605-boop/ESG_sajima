@@ -287,17 +287,23 @@ nav button{min-height:44px;font-size:14px}
 const $=s=>document.querySelector(s);
 /* ===== Supabase 연결 (서버에 닿지 않으면 자동으로 '이 기기에만 저장' 시연 모드로 동작) ===== */
 const SB_URL="https://qbkehxbdwhtqdkcnhsdy.supabase.co",SB_KEY="sb_publishable_Z4dMWj2wJhXa5fbJzGG5SQ_W53L99Sa";
-let sb=null,DB=false;
+let sb=null,DB=false,dbWhy="";const APPV="db-5";
 function loadSB(){return new Promise(function(res){if(window.supabase)return res();var s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";s.onload=function(){res()};s.onerror=function(){res()};document.head.appendChild(s);setTimeout(res,6000)})}
 async function initDB(){
   try{
     await loadSB();
-    if(!window.supabase||!window.supabase.createClient)return;
-    const ac=new AbortController(),t=setTimeout(()=>ac.abort(),4000);
-    const r=await fetch(SB_URL+"/auth/v1/health",{headers:{apikey:SB_KEY},signal:ac.signal});clearTimeout(t);
-    if(!r.ok)return;
-    sb=window.supabase.createClient(SB_URL,SB_KEY);DB=true;
-  }catch(e){DB=false}
+    if(!window.supabase||!window.supabase.createClient){dbWhy="연결 라이브러리를 불러오지 못했어요";return}
+    const tmo=()=>new Promise((_,rej)=>setTimeout(()=>rej(new Error("시간 초과")),7000));
+    /* 1단계: 서버 주소에 닿는지 (CORS와 무관하게 확인) */
+    try{await Promise.race([fetch(SB_URL+"/auth/v1/health",{mode:"no-cors"}),tmo()])}
+    catch(e){dbWhy="서버 주소에 접속하지 못했어요. 네트워크나 차단 설정을 확인해 주세요 ("+String(e&&e.message||e).slice(0,40)+")";return}
+    /* 2단계: 이 브라우저에서 실제 요청이 허용되는지 */
+    try{await Promise.race([fetch(SB_URL+"/auth/v1/settings",{headers:{apikey:SB_KEY}}),tmo()])}
+    catch(e){dbWhy="서버는 있지만 이 브라우저가 요청을 막았어요. 다른 브라우저(크롬·사파리)나 다른 네트워크로 열어 보세요 ("+String(e&&e.message||e).slice(0,40)+")";return}
+    /* 일부 앱 내장 브라우저(카카오톡 등)는 fetch의 signal 옵션을 처리하지 못해서 제거해요 */
+    const safeFetch=(u,o)=>{if(o&&o.signal){o=Object.assign({},o);delete o.signal}return fetch(u,o)};
+    sb=window.supabase.createClient(SB_URL,SB_KEY,{global:{fetch:safeFetch}});DB=true;
+  }catch(e){DB=false;dbWhy="서버에 닿지 않았어요 ("+String(e&&e.message||e).slice(0,60)+")"}
 }
 const dbReady=initDB();
 const items=[
@@ -391,7 +397,7 @@ $("#goBorrow").onclick=()=>{
 };
 $("#borrowOut").onclick=e=>{
   const a=e.target.dataset;
-  if(a.ask!==undefined){const it=items[+a.ask];it.l++;dbDeal(it);deal(it.p?"빌림":"나눔",it.n,it.o,it.co);if(it.db){toast(`${it.o}님께 신청을 저장했어요`)}else{say(it.o,`안녕하세요! "${it.n}" 빌리고 싶어요.`);toast(`${it.o}님께 신청했어요. 채팅에서 이어가세요`)}}
+  if(a.ask!==undefined){const it=items[+a.ask];it.l++;dbDeal(it);deal(it.p?"빌림":"나눔",it.n,it.o,it.co);say(it.db?it.ownerId:null,it.o,`안녕하세요! "${it.n}" 빌리고 싶어요.`);toast(`${it.o}님께 신청했어요. 채팅에서 이어가세요`)}
   if(a.req){const[n,q]=a.req.split("|");reqs.unshift({n:q>1?n+" "+q+"개":n,who:"나",days:+$("#days").value||1,dist:+$("#dist").value||2});dbRequest(n,+q||1);toast("대여 요청을 등록했어요");e.target.disabled=true;e.target.textContent="등록됨"}
 };
 
@@ -409,7 +415,7 @@ $("#goLend").onclick=()=>{
   const idx=log.push({n,c:it.c,before:lastPhoto,after:null})-1;
   const m=reqs.map(r=>({r,s:sim(clean(r.n),n)})).filter(x=>x.s>0).sort((a,b)=>b.s-a.s);
   let h=`<h2>등록했어요. 이제 빌리기 검색에도 나와요.</h2>`;
-  h+=m.length?`<p class="hint">비슷한 대여 요청 ${m.length}건을 찾았어요.</p>`+m.map(x=>`<div class="res"><h3><span>${esc(x.r.n)}</span><span class="pct">${Math.round(x.s*100)}% 일치</span></h3><div class="meta">${esc(x.r.who)}님 · ${x.r.days}일 · ${x.r.dist}km</div><button class="btn sm" data-ok="${esc(x.r.who)}">${esc(x.r.who)}님에게 빌려주기</button></div>`).join(""):`<div class="empty"><b>지금 맞는 요청은 없어요.</b>요청이 올라오면 바로 알려 드릴게요.</div>`;
+  h+=m.length?`<p class="hint">비슷한 대여 요청 ${m.length}건을 찾았어요.</p>`+m.map(x=>`<div class="res"><h3><span>${esc(x.r.n)}</span><span class="pct">${Math.round(x.s*100)}% 일치</span></h3><div class="meta">${esc(x.r.who)}님 · ${x.r.days}일 · ${x.r.dist}km</div><button class="btn sm" data-ok="${esc(x.r.who)}" data-uid="${esc(x.r.uid||"")}">${esc(x.r.who)}님에게 빌려주기</button></div>`).join(""):`<div class="empty"><b>지금 맞는 요청은 없어요.</b>요청이 올라오면 바로 알려 드릴게요.</div>`;
   h+=`<h2>대여 전후 상태 비교</h2><div class="res"><b>${esc(n)}</b><div class="cmp"><div>${lastPhoto?`<img alt="대여 전 사진" src="${lastPhoto}">`:"대여 전 사진 없음"}</div><div id="aft${idx}">반납 후 사진을 올려 주세요</div></div>
   <label for="af${idx}">반납 후 사진</label><input id="af${idx}" type="file" accept="image/*" data-after="${idx}"></div>`;
   $("#lendOut").innerHTML=h;lastPhoto=null;
@@ -419,7 +425,7 @@ $("#lendOut").onchange=e=>{
   const f=e.target.files[0];if(!f)return;
   const r=new FileReader();r.onload=()=>{$("#aft"+i).innerHTML=`<img alt="반납 후 사진" src="${r.result}">`;toast("두 사진을 나란히 비교해 보세요")};r.readAsDataURL(f);
 };
-$("#lendOut").onclick=e=>{if(e.target.dataset.ok){const w=e.target.dataset.ok;if(reqs.some(z=>z.who===w&&z.db)){toast(w+"님과의 채팅 연결은 준비 중이에요");return}deal("빌려줌",$("#ln").value.trim(),w);say(w,`"${$("#ln").value.trim()}" 빌려드릴 수 있어요!`);toast(w+"님에게 전달했어요. 채팅에서 이어가세요")}};
+$("#lendOut").onclick=e=>{if(e.target.dataset.ok){const w=e.target.dataset.ok,u=e.target.dataset.uid||null;deal("빌려줌",$("#ln").value.trim(),w);say(u,w,`"${$("#ln").value.trim()}" 빌려드릴 수 있어요!`);toast(w+"님에게 전달했어요. 채팅에서 이어가세요")}};
 
 /* 교환 */
 $("#goSwap").onclick=()=>{
@@ -428,12 +434,12 @@ $("#goSwap").onclick=()=>{
   const m=swaps.map(s=>{const a=sim(clean(w),s.have),b=sim(clean(h),s.want);return{s,a,b,sc:a+b}}).filter(x=>x.sc>0).sort((x,y)=>y.sc-x.sc);
   let o=m.length?m.map(x=>`<div class="res ${x.a>0&&x.b>0?"top":""}"><h3><span>${esc(x.s.who)}님</span><span class="pct">${x.a>0&&x.b>0?"서로 딱 맞아요":"한쪽만 맞아요"}</span></h3>
   <div class="meta">내게 필요한 것: ${esc(x.s.have)} · 상대가 원하는 것: ${esc(x.s.want)}</div>
-  <button class="btn sm" data-sw="${esc(x.s.who)}">교환 제안하기</button></div>`).join(""):`<div class="empty"><b>아직 맞는 상대가 없어요.</b>교환 글을 올려 두면 맞는 사람이 나타날 때 알려 드려요.</div>`;
+  <button class="btn sm" data-sw="${esc(x.s.who)}" data-uid="${esc(x.s.uid||"")}">교환 제안하기</button></div>`).join(""):`<div class="empty"><b>아직 맞는 상대가 없어요.</b>교환 글을 올려 두면 맞는 사람이 나타날 때 알려 드려요.</div>`;
   o+=`<button class="btn alt" id="postSwap">내 교환 글 올리기</button>`;
   $("#swapOut").innerHTML=`<h2>교환 후보 ${m.length}명</h2>`+o;
   $("#postSwap").onclick=()=>{swaps.unshift({have:h,want:w,who:"나"});dbSwap(h,w);toast("교환 글을 올렸어요");$("#postSwap").disabled=true};
 };
-$("#swapOut").onclick=e=>{const w=e.target.dataset.sw;if(!w)return;if(swaps.some(z=>z.who===w&&z.db)){toast(w+"님에게 제안을 저장하는 기능은 준비 중이에요");return}const x=$("#sh").value+" ↔ "+$("#sw").value;deal("교환",x,w,10);say(w,`교환 제안드려요: ${x}`);toast(w+"님에게 제안했어요. 채팅에서 이어가세요")};
+$("#swapOut").onclick=e=>{const w=e.target.dataset.sw;if(!w)return;const u=e.target.dataset.uid||null,x=$("#sh").value+" ↔ "+$("#sw").value;deal("교환",x,w,10);say(u,w,`교환 제안드려요: ${x}`);toast(w+"님에게 제안했어요. 채팅에서 이어가세요")};
 
 /* 인기 */
 function renderHot(){
@@ -444,86 +450,102 @@ function renderHot(){
   $("#saved").textContent="탄소 절감량은 임시 예시 계수로 계산한 값이며, 환경성적표지 등 공개 자료로 교체할 예정이에요.";
 }
 
-/* 채팅 (Claude 연동: sample capability, 없으면 기본 답장) */
-let sample=null;
-async function getSample(){if(sample)return sample;try{sample=await claude.use("sample")}catch(e){}return sample}
-const threads={"하늘":{m:[["them","텐트 이번 주말에 쓰실 거죠?"]],u:1},"민아":{m:[["them","드릴 사용법 간단히 적어 드릴게요."]],u:0}};
-let cur=null;
+/* 채팅: 이웃끼리 1:1 대화 (Supabase messages 테이블 + Realtime). 서버에 연결되지 않으면 예시 대화만 보여요 */
+const threads={"s:하늘":{key:"s:하늘",name:"하늘",uid:null,sample:true,m:[["them","텐트 이번 주말에 쓰실 거죠?"]],u:1},"s:민아":{key:"s:민아",name:"민아",uid:null,sample:true,m:[["them","드릴 사용법 간단히 적어 드릴게요."]],u:0}};
+const names={},seen=new Set(),blocked=new Set();
+let cur=null,chatCh=null,chatPoll=null,lastAt="1970-01-01T00:00:00Z";
 const RISK=/계좌|송금|입금|카카오|카톡|오픈채팅|링크|선입금/;
 const shown=id=>!$("#"+id).hidden;
-const fmt=t=>t.m.map(x=>(x[0]==="me"?"나: ":"상대: ")+x[1]).join("\n");
-function badge(){const n=Object.values(threads).reduce((a,t)=>a+t.u,0);$("#bd").textContent=n||""}
-function scripted(text){return /언제|시간|날짜/.test(text)?"주말 오전이 좋아요. 몇 시가 편하세요?":/어디|장소/.test(text)?"동네 공원 입구에서 만나요.":/사진|상태/.test(text)?"대여 전 사진 올려 둘게요. 반납 때 비교해요.":"네, 좋아요! 날짜와 만날 장소를 정해요."}
+const canChat=()=>!!(DB&&sb&&me.id);
+function badge(){const n=Object.values(threads).reduce((a,t)=>a+(blocked.has(t.uid)?0:t.u),0);$("#bd").textContent=n||""}
 function redraw(){if(shown("chat"))renderChat()}
-async function aiReply(name){
-  const t=threads[name];t.typing=true;redraw();let r;
-  try{
-    if(!(await getSample()))throw 0;
-    const res=await sample(`당신은 동네 물건 대여·교환 앱 '사지 마!'의 이웃 사용자 "${name}"입니다. 아래 대화에서 상대(나)에게 이어질 답장 한 개만 쓰세요.
-규칙: 존댓말, 1~2문장, 이모지와 따옴표 없이 본문만. 날짜·장소·가격은 대화 흐름에 맞게 자연스럽게 제안하되, 외부 송금이나 개인정보는 요구하지 않습니다. 보증금은 앱에서 물건 가치의 10~30%이고 대여 전후 사진을 남기는 것이 원칙입니다.
-대화:
-${fmt(t)}`,{cache:false,modelTier:"quick"});
-    r=(res.text||"").trim()||scripted("");
-  }catch(e){r=scripted(t.m[t.m.length-1][1])}
-  t.typing=false;t.sugg=null;t.m.push(["them",r]);
-  if(cur!==name||!shown("chat"))t.u++;badge();redraw();
+function threadFor(uid,name){const key=uid||"s:"+name;return threads[key]=threads[key]||{key:key,name:name||names[uid]||"이웃",uid:uid||null,sample:!uid,m:[],u:0}}
+function markRead(uid){if(!canChat()||!uid)return;sb.from("messages").update({read_at:new Date().toISOString()}).eq("recipient_id",me.id).eq("sender_id",uid).is("read_at",null).then(function(){})}
+function addMsg(row,init){
+  if(seen.has(row.id))return;seen.add(row.id);
+  if(row.created_at>lastAt)lastAt=row.created_at;
+  const mine=row.sender_id===me.id,other=mine?row.recipient_id:row.sender_id;
+  if(!mine&&blocked.has(other))return;
+  const t=threadFor(other);
+  if(!names[other]&&!t._nm){t._nm=1;nicks([other]).then(function(m){if(m[other]){names[other]=m[other];t.name=m[other];redraw()}})}
+  t.m.push([mine?"me":"them",row.body,row.id]);
+  if(!mine){
+    if(init){if(!row.read_at)t.u++}
+    else if(cur===other&&shown("chat"))markRead(other);
+    else t.u++;
+  }
+  if(!init){badge();redraw()}
 }
-function say(name,text){
-  const t=threads[name]=threads[name]||{m:[],u:0};
-  t.m.push(["me",text]);badge();redraw();aiReply(name);
+async function say(uid,name,text){
+  if(uid&&me.id&&uid===me.id){toast("내가 등록한 물건이에요");return false}
+  const t=threadFor(uid,name);
+  if(!uid||!canChat()){t.m.push(["me",text]);badge();redraw();return true}
+  if(blocked.has(uid)){toast("차단한 이웃이에요");return false}
+  const r=await sb.from("messages").insert({sender_id:me.id,recipient_id:uid,body:String(text).slice(0,500)}).select().single();
+  if(r.error){toast("메시지를 보내지 못했어요. 상대가 차단했을 수 있어요");return false}
+  addMsg(r.data);return true;
+}
+async function loadBlocks(){blocked.clear();try{const r=await sb.from("blocks").select("blocked_id").eq("blocker_id",me.id);(r.data||[]).forEach(function(x){blocked.add(x.blocked_id)})}catch(e){}}
+async function pollNew(){
+  if(!canChat())return;
+  try{const r=await sb.from("messages").select("*").eq("recipient_id",me.id).gt("created_at",lastAt).order("created_at",{ascending:true}).limit(100);(r.data||[]).forEach(function(x){addMsg(x)})}catch(e){}
+}
+function stopChat(){
+  if(chatPoll){clearInterval(chatPoll);chatPoll=null}
+  if(chatCh&&sb){try{sb.removeChannel(chatCh)}catch(e){}}
+  chatCh=null;for(const k in threads)delete threads[k];
+  seen.clear();blocked.clear();cur=null;lastAt="1970-01-01T00:00:00Z";badge();
+}
+async function startChat(){
+  stopChat();
+  const r=await sb.from("messages").select("*").or("sender_id.eq."+me.id+",recipient_id.eq."+me.id).order("created_at",{ascending:true}).limit(500);
+  const rows=r.data||[];
+  const ids=Array.from(new Set(rows.map(function(x){return x.sender_id===me.id?x.recipient_id:x.sender_id})));
+  Object.assign(names,await nicks(ids));
+  await loadBlocks();
+  rows.forEach(function(x){addMsg(x,true)});
+  badge();redraw();
+  chatCh=sb.channel("msg-"+me.id).on("postgres_changes",{event:"INSERT",schema:"public",table:"messages",filter:"recipient_id=eq."+me.id},function(p){addMsg(p.new)}).subscribe();
+  chatPoll=setInterval(pollNew,15000);
 }
 function renderChat(){
   const o=$("#chatOut");
-  if(!cur){
-    const k=Object.keys(threads);
-    o.innerHTML=`<h2 style="margin-top:14px">채팅</h2>`+(k.length?k.map(n=>{const t=threads[n],l=t.m[t.m.length-1];return`<button class="th" data-th="${esc(n)}"><span><b>${esc(n)}님</b><small>${esc(l?l[1]:"")}</small></span>${t.u?`<span class="bd">${t.u}</span>`:""}</button>`}).join(""):`<div class="empty"><b>아직 대화가 없어요.</b>대여 신청이나 교환 제안을 하면 채팅방이 열려요.</div>`);
+  if(!cur||!threads[cur]){
+    cur=null;
+    const k=Object.keys(threads).filter(function(x){return !blocked.has(threads[x].uid)});
+    o.innerHTML=`<h2 style="margin-top:14px">채팅</h2>`+(k.length?k.map(n=>{const t=threads[n],l=t.m[t.m.length-1];return`<button class="th" data-th="${esc(n)}"><span><b>${esc(t.name)}님</b><small>${esc(l?l[1]:"")}</small></span>${t.u?`<span class="bd">${t.u}</span>`:""}</button>`}).join(""):`<div class="empty"><b>아직 대화가 없어요.</b>대여 신청이나 교환 제안을 하면 채팅방이 열려요.</div>`)+`<p class="hint">${canChat()?"이웃과 1:1로 대화해요. 거래 약속은 학교·공공장소에서 잡고, 송금은 앱 밖에서 하지 마세요.":"서버에 연결되지 않아 예시 대화만 보여요."}</p>`;
     return;
   }
-  const t=threads[cur],keep=$("#ci")?$("#ci").value:"";t.u=0;badge();
-  const last=t.m.length?t.m[t.m.length-1][1]:"";
+  const t=threads[cur],keep=$("#ci")?$("#ci").value:"";
+  if(t.u&&t.uid)markRead(t.uid);
+  t.u=0;badge();
   const risk=t.m.slice(-2).some(x=>x[0]==="them"&&RISK.test(x[1]));
-  const sum=t.sum?`<div class="res top"><b>약속 정리</b>${Object.entries(t.sum).map(([k,v])=>`<div class="meta" style="margin:4px 0"><b>${esc(k)}</b> ${esc(Array.isArray(v)?v.join(", "):v||"미정")}</div>`).join("")}</div>`:"";
-  o.innerHTML=`<div style="display:flex;align-items:center;gap:10px;margin-top:14px"><button class="btn sm alt" id="back">목록</button><b>${esc(cur)}님</b><button class="btn sm" id="rp" style="margin-left:auto">신고·차단</button></div>
+  o.innerHTML=`<div style="display:flex;align-items:center;gap:10px;margin-top:14px"><button class="btn sm alt" id="back">목록</button><b>${esc(t.name)}님</b><button class="btn sm" id="rp" style="margin-left:auto">신고·차단</button></div>
   ${risk?`<div class="empty" style="margin-top:12px"><b>안전 알림</b>앱 밖 송금이나 링크 요청은 사기일 수 있어요. 보증금과 거래는 앱 안에서만 진행하세요.</div>`:""}
-  <div class="msgs" id="msgs">${t.m.map(x=>`<div class="m ${x[0]}">${esc(x[1])}</div>`).join("")}${t.typing?'<div class="m">입력 중...</div>':""}</div>
-  ${sum}
-  <div class="send"><label for="ci" style="position:absolute;left:-9999px">메시지</label><input id="ci" placeholder="메시지 입력"><button class="btn" id="cs">보내기</button></div>
-  <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">
-  <button class="btn sm" id="sg" ${t.busy?"disabled":""}>${t.busy==="s"?"생각 중...":"추천 답장"}</button>
-  <button class="btn sm alt" id="sm" ${t.busy?"disabled":""}>${t.busy==="m"?"정리 중...":"약속 정리"}</button>
-  ${(t.sugg||[]).map((x,i)=>`<button class="tag" style="border:0;cursor:pointer;font:inherit;font-size:13px" data-sg="${i}">${esc(x)}</button>`).join("")}</div>
-  <p class="hint">답장은 Claude가 이웃 역할로 작성해요. AI 연결이 없으면 기본 답장이 나와요.</p>`;
+  <div class="msgs" id="msgs">${t.m.length?t.m.map(x=>`<div class="m ${x[0]}">${esc(x[1])}</div>`).join(""):'<p class="hint">첫 메시지를 보내 보세요.</p>'}</div>
+  <div class="send"><label for="ci" style="position:absolute;left:-9999px">메시지</label><input id="ci" placeholder="메시지 입력" maxlength="500" autocomplete="off"><button class="btn" id="cs">보내기</button></div>
+  <p class="hint">${t.sample?"예시 이웃이라 답장이 오지 않아요. 실제 이웃과는 서버에 연결한 뒤 대화할 수 있어요.":"이웃과 주고받는 실제 대화예요. 계좌번호·주소 같은 개인정보는 보내지 마세요."}</p>`;
   if(keep)$("#ci").value=keep;
   const m=$("#msgs");m.scrollTop=m.scrollHeight;
 }
-async function aiTool(kind){
-  const t=threads[cur];
-  if(!(await getSample())){toast("이 화면에서는 AI 연결을 쓸 수 없어요");if(kind==="s"){t.sugg=["언제 가능하세요?","어디서 만날까요?","대여 전 사진 보내 드릴게요."];redraw()}return}
-  t.busy=kind;redraw();
-  try{
-    if(kind==="s"){
-      t.sugg=await sample.json(`동네 물건 대여·교환 앱 채팅입니다. 아래 대화에서 "나"가 다음에 보낼 만한 짧은 존댓말 답장 3개를 JSON 문자열 배열로만 출력하세요.
-대화:
-${fmt(t)}`,{cache:false,modelTier:"quick"});
-    }else{
-      t.sum=await sample.json(`아래 대화에서 합의된 거래 내용을 JSON 객체로만 출력하세요. 키는 "물건","날짜","장소","가격","보증금","할 일"(문자열 배열)입니다. 대화에 없는 값은 빈 문자열로 두고 추측하지 마세요.
-대화:
-${fmt(t)}`,{cache:false,modelTier:"quick"});
-    }
-  }catch(e){toast(e&&e.code==="not_granted"?"AI 사용을 허용하지 않았어요":"잠시 후 다시 시도해 주세요")}
-  t.busy=null;redraw();
+async function reportBlock(){
+  const t=threads[cur];if(!t)return;
+  if(!t.uid||!canChat()){toast("예시 대화라 신고·차단은 서버 연결 후 쓸 수 있어요");return}
+  if(!confirm(t.name+"님을 차단하고 신고할까요? 차단하면 서로 메시지를 보낼 수 없어요."))return;
+  const a=await sb.from("blocks").insert({blocker_id:me.id,blocked_id:t.uid});
+  if(a.error&&a.error.code!=="23505"){toast("처리하지 못했어요. 잠시 후 다시 시도해 주세요");return}
+  await sb.from("reports").insert({reporter_id:me.id,reported_id:t.uid,reason:"채팅 신고"});
+  blocked.add(t.uid);t.u=0;cur=null;badge();renderChat();toast("차단하고 신고했어요");
 }
 $("#chatOut").onclick=e=>{
   const b=e.target.closest("[data-th]");if(b){cur=b.dataset.th;renderChat();return}
-  const g=e.target.closest("[data-sg]");if(g){$("#ci").value=threads[cur].sugg[+g.dataset.sg];$("#ci").focus();return}
   const id=e.target.id;
   if(id==="back"){cur=null;renderChat()}
-  if(id==="cs")send();if(id==="rp")toast("신고·차단이 접수됐어요(시연)");
-  if(id==="sg")aiTool("s");
-  if(id==="sm")aiTool("m");
+  if(id==="cs")send();
+  if(id==="rp")reportBlock();
 };
 $("#chatOut").onkeydown=e=>{if(e.key==="Enter"&&e.target.id==="ci"&&!e.isComposing)send()};
-function send(){const i=$("#ci"),v=i.value.trim();if(!v)return;i.value="";say(cur,v);setTimeout(()=>{const x=$("#ci");x&&x.focus()},0)}
+function send(){const i=$("#ci"),v=i.value.trim();if(!v||!cur||!threads[cur])return;const t=threads[cur];i.value="";say(t.uid,t.name,v);setTimeout(()=>{const x=$("#ci");x&&x.focus()},0)}
 
 /* 프로필 */
 const me={name:"나",town:"우리 동네",pos:{x:500,y:350},email:""};
@@ -625,9 +647,9 @@ async function loadAll(){
     for(let i=items.length-1;i>=0;i--)if(items[i].db)items.splice(i,1);
     ai.forEach(x=>{const mine=x.owner_id===me.id;items.push({n:x.name,t:x.tags||"",o:mine?"나":(nm[x.owner_id]||"이웃"),d:0.1,x:x.pos_x==null?500:x.pos_x,y:x.pos_y==null?350:x.pos_y,p:x.price_per_day,v:x.value,c:x.condition,q:x.qty,l:0,co:Number(x.co2_kg)||0,db:true,id:x.id,ownerId:x.owner_id})});
     for(let i=reqs.length-1;i>=0;i--)if(reqs[i].db)reqs.splice(i,1);
-    bi.filter(x=>x.requester_id!==me.id).forEach(x=>reqs.unshift({n:x.name+(x.qty>1?" "+x.qty+"개":""),who:nm[x.requester_id]||"이웃",days:x.days,dist:Number(x.max_distance_km)||2,db:true}));
+    bi.filter(x=>x.requester_id!==me.id).forEach(x=>reqs.unshift({n:x.name+(x.qty>1?" "+x.qty+"개":""),uid:x.requester_id,who:nm[x.requester_id]||"이웃",days:x.days,dist:Number(x.max_distance_km)||2,db:true}));
     for(let i=swaps.length-1;i>=0;i--)if(swaps[i].db)swaps.splice(i,1);
-    ci.filter(x=>x.owner_id!==me.id).forEach(x=>swaps.unshift({have:x.have,want:x.want,who:nm[x.owner_id]||"이웃",db:true}));
+    ci.filter(x=>x.owner_id!==me.id).forEach(x=>swaps.unshift({have:x.have,want:x.want,uid:x.owner_id,who:nm[x.owner_id]||"이웃",db:true}));
   }catch(e){}
 }
 async function enterDB(user){
@@ -637,6 +659,7 @@ async function enterDB(user){
   me.id=user.id;
   await loadAll();
   enter({name:(p&&p.nickname)||md.nickname||"이웃",town:(p&&p.town)||md.town,pos:(p&&p.pos_x!=null)?{x:p.pos_x,y:p.pos_y}:undefined,email:user.email});
+  startChat().catch(function(){toast("채팅을 불러오지 못했어요")});
 }
 function saveMe(){
   if(DB&&me.id){sb.from("profiles").update({town:me.town,pos_x:me.pos.x,pos_y:me.pos.y}).eq("id",me.id).then(function(){});return}
@@ -706,7 +729,7 @@ $("#doSign").onclick=async()=>{
   await dbReady;
   if(DB){const btn=$("#doSign");btn.disabled=true;try{
     const r=await sb.auth.signUp({email:em,password:p,options:{data:{nickname:n,town:$("#su-t").value.trim()||"우리 동네",pos_x:pick.x,pos_y:pick.y,is_under14:u14}}});
-    if(r.error){const m=dbErr(r.error);er.textContent=/already|registered/i.test(m)?"이미 가입된 이메일이에요. 로그인해 주세요.":/password/i.test(m)?"비밀번호 조건을 확인해 주세요.":/rate|limit/i.test(m)?"잠시 후 다시 시도해 주세요.":"가입에 실패했어요. 잠시 후 다시 시도해 주세요.";return}
+    if(r.error){const m=dbErr(r.error);er.textContent=/already|registered/i.test(m)?"이미 가입된 이메일이에요. 로그인해 주세요.":/password/i.test(m)?"비밀번호 조건을 확인해 주세요.":/rate|limit/i.test(m)?"잠시 후 다시 시도해 주세요.":"가입에 실패했어요. ("+m.slice(0,80)+")";return}
     $("#su-p").value=$("#su-p2").value="";
     if(!r.data.session){setAuth("in");$("#lgErr").textContent="가입 확인 메일을 보냈어요. 메일의 링크를 누른 뒤 로그인해 주세요.";return}
     er.textContent="";await enterDB(r.data.user)
@@ -715,15 +738,16 @@ $("#doSign").onclick=async()=>{
   all[em]=u;store.set("saji_users",JSON.stringify(all));
   er.textContent="";$("#su-p").value=$("#su-p2").value="";enter(Object.assign({email:em},u));
 };
-$("#logout").onclick=()=>{if(DB&&sb)sb.auth.signOut();me.id=null;clearAuto();cur=null;pick=null;drawMap($("#mapSign"),null,[],onPickSign);view("intro")};
+$("#logout").onclick=()=>{stopChat();if(DB&&sb)sb.auth.signOut();me.id=null;clearAuto();cur=null;pick=null;drawMap($("#mapSign"),null,[],onPickSign);view("intro")};
 store.del("saji_session");
 (async function(){
   await dbReady;
   if(DB){
-    const mh=$("#modeHint");if(mh)mh.textContent="계정과 거래 정보는 서버에 안전하게 저장돼요.";
+    const mh=$("#modeHint");if(mh)mh.textContent="계정과 거래 정보는 서버에 안전하게 저장돼요. ("+APPV+")";
     try{const g=await sb.auth.getSession(),ss=g.data&&g.data.session;if(ss&&getAuto()===ss.user.email){await enterDB(ss.user)}else if(ss){await sb.auth.signOut()}}catch(e){}
     return;
   }
+  {const mh=$("#modeHint");if(mh)mh.textContent="시연용 모드예요. 계정 정보는 이 기기의 브라우저에만 저장돼요. ["+(dbWhy||"서버 미연결")+"] ("+APPV+")"}
   const em=getAuto(),u=em&&users()[em];if(u)enter(Object.assign({email:em},u));else clearAuto();
 })();
 })();
