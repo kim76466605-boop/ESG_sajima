@@ -87,6 +87,11 @@ h1{margin:0;font-size:19px;font-weight:800;letter-spacing:-.04em;white-space:now
 .topr{display:flex;gap:4px;align-items:center}
 .topr .tag{--hole:var(--bg)}
 #logout{min-height:34px;padding:6px 8px;font-size:13px;font-weight:500}
+#logout{white-space:nowrap;flex:none}
+.hero header{flex:none}
+.topr{flex:none}
+.town{flex:0 1 auto;min-width:0}
+@media (max-width:370px){.hero h1{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}.hero .in{gap:4px}}
 @media (max-width:420px){#who{display:none}}
 
 /* ---------- 본문 ---------- */
@@ -211,6 +216,39 @@ ul.rules li::before{content:"";position:absolute;left:16px;top:17px;width:11px;h
 .sp-cap{margin:8px 0 0;font-size:14px;color:#66706A}
 @keyframes spin{to{transform:rotate(360deg)}}
 
+/* 메일 인증번호 확인 */
+#fVerify{text-align:center;padding-top:6px}
+.vf-ic{width:64px;height:64px;margin:6px auto 12px;border-radius:50%;background:var(--go-soft);color:var(--go);display:grid;place-items:center}
+.vf-ic svg{width:30px;height:30px}
+.vf-t{margin:0;font-size:21px;font-weight:800;letter-spacing:-.03em}
+#vfLead{margin:8px 0 0;font-size:14px;color:var(--mute);line-height:1.6;word-break:keep-all;overflow-wrap:anywhere}
+#vfLead b{color:var(--ink)}
+.otp{position:relative;display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:22px 0 6px}
+.otp span{height:56px;border-radius:12px;background:var(--soft);border:1.5px solid transparent;display:grid;place-items:center;font-size:24px;font-weight:800;color:var(--ink);transition:border-color .15s,background-color .15s}
+.otp span.cur{border-color:var(--go);background:var(--surface);box-shadow:0 0 0 3px var(--go-soft)}
+.otp input{position:absolute;inset:0;width:100%;height:100%;min-height:0;padding:0;border:0;opacity:0;font-size:16px;caret-color:transparent;cursor:text}
+#fVerify .err,#fVerify .empty{text-align:left}
+.vf-row{display:flex;justify-content:center;gap:4px;margin-top:8px}
+.vf-row .btn.sm{min-height:38px}
+#fVerify .hint{text-align:center}
+
+/* 새로고침: 상단 버튼 · 끌어내리기 */
+html,body{overscroll-behavior-y:contain}
+.iconbtn{width:38px;height:38px;flex:none;border:0;background:none;border-radius:10px;display:grid;place-items:center;color:var(--ink);cursor:pointer;padding:0}
+.iconbtn svg{width:21px;height:21px}
+.iconbtn:active{background:var(--soft)}
+.iconbtn.spin svg{animation:spin .8s linear infinite}
+#ptr{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 50px);z-index:19;width:42px;height:42px;margin-top:-48px;border-radius:50%;background:var(--surface);box-shadow:0 4px 14px rgba(20,32,26,.18);display:grid;place-items:center;color:var(--mute);opacity:0;transform:translate(-50%,0);pointer-events:none;transition:opacity .15s}
+#ptr svg{width:22px;height:22px}
+#ptr.ready{color:var(--go)}
+#ptr.busy{color:var(--go)}
+#ptr.busy svg{animation:spin .8s linear infinite}
+
+/* 탭별 최신 글 목록 */
+.feedhd{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:30px 2px 4px}
+.feedhd h2{margin:0}
+.feedhd .btn.sm{min-height:34px;padding:6px 10px;font-size:13px}
+
 /* 후기 작성 시트 */
 .modal{position:fixed;inset:0;z-index:60;display:flex;align-items:flex-end;justify-content:center}
 .m-back{position:absolute;inset:0;background:rgba(20,26,22,.45);animation:fadein .2s ease}
@@ -333,13 +371,24 @@ input[type=checkbox]:focus{box-shadow:none}
 <div class="err" id="suErr" role="alert"></div>
 <button class="btn" id="doSign">가입하고 시작하기</button>
 </div>
+<div id="fVerify" hidden>
+<div class="vf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M4 7.5l8 6 8-6"/></svg></div>
+<h2 class="vf-t">메일함을 확인해 주세요</h2>
+<p id="vfLead"></p>
+<div class="otp" id="otpBox"><span></span><span></span><span></span><span></span><span></span><span></span><label for="vf-code" class="vh">인증번호 6자리</label><input id="vf-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]*"></div>
+<div class="empty" id="vfSim" hidden></div>
+<div class="err" id="vfErr" role="alert"></div>
+<button class="btn" id="doVerify">인증하고 시작하기</button>
+<div class="vf-row"><button type="button" class="btn sm ghost" id="vfResend">인증번호 다시 받기</button><button type="button" class="btn sm ghost" id="vfBack">이메일 바꾸기</button></div>
+<p class="hint" id="vfHint"></p>
+</div>
 </div></div></div>
 
 <div id="app" hidden>
 <div class="hero"><div class="in">
 <header><svg class="logo" viewBox="0 0 64 64" aria-hidden="true"><g transform="rotate(28 34 34)"><path fill="#0C7C5E" style="fill:var(--go)" fill-rule="evenodd" d="M24 23h26a6 6 0 0 1 6 6v10a6 6 0 0 1-6 6H24l-11-11z M25.5 34a3.5 3.5 0 1 0-7 0a3.5 3.5 0 1 0 7 0z"/></g><path d="M23.4 28.4C15 27 9 21 10.5 14.5 12 8.5 19.5 6 25.5 9.5" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/><path d="M20.6 6.2l5.2 3.5-4.2 4.4" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg><h1>사지 마!</h1></header>
 <button type="button" class="town" id="townBtn" aria-label="내 동네 위치 바꾸기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.1-7-11.5a7 7 0 0 1 14 0C19 14.9 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg><span id="townTxt">우리 동네</span></button>
-<div class="topr"><span class="tag" id="who"></span><button class="btn sm ghost" id="logout">로그아웃</button></div>
+<div class="topr"><span class="tag" id="who"></span><button type="button" class="iconbtn" id="refreshBtn" aria-label="새로고침" title="새로고침"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v4.5h-4.5"/></svg></button><button class="btn sm ghost" id="logout">로그아웃</button></div>
 </div></div>
 <div class="wrap">
 
@@ -368,6 +417,7 @@ input[type=checkbox]:focus{box-shadow:none}
 <p class="hint">추천 순서는 나눔 → 대여 → 교환 → 그래도 없을 때 구매예요. 기간·거리·가격·상태를 따져 이유와 함께 보여 드려요.</p>
 </div>
 <div id="borrowOut"></div>
+<div id="feedItems"></div>
 </section>
 
 <!-- 빌려주기 -->
@@ -391,6 +441,7 @@ input[type=checkbox]:focus{box-shadow:none}
 <p class="hint">하루 가격을 0원으로 하면 나눔으로 올라가요. 새 제품 2만 원 이하는 보증금이 면제돼요. 사진은 촬영 시각과 함께 남기고 반납 때 양쪽이 확인해요. 만 14세 미만은 보호자 동의 후 이용하고, 거래는 학교·공공장소에서 해요.</p>
 </div>
 <div id="lendOut"></div>
+<div id="feedReqs"></div>
 </section>
 
 <!-- 교환 -->
@@ -405,6 +456,7 @@ input[type=checkbox]:focus{box-shadow:none}
 <button class="btn" id="goSwap">교환 상대 찾기</button>
 </div>
 <div id="swapOut"></div>
+<div id="feedSwaps"></div>
 </section>
 
 <!-- 인기 -->
@@ -434,6 +486,7 @@ input[type=checkbox]:focus{box-shadow:none}
 <button class="btn" id="rvSend">후기 남기기</button>
 <button class="btn ghost" data-close>나중에 쓸게요</button>
 </div></div>
+<div id="ptr" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v4.5h-4.5"/></svg></div>
 <div class="toast" id="toast" role="status"></div>
 
 <script>
@@ -466,6 +519,12 @@ input[type=checkbox]:focus{box-shadow:none}
 (function(){
 const $=s=>document.querySelector(s);
 /* ===== Supabase 연결 (서버에 닿지 않으면 자동으로 '이 기기에만 저장' 시연 모드로 동작) ===== */
+/* 메일 인증 방식: false = 메일 속 링크를 눌러 인증 (Supabase 기본 메일)
+   true  = 메일 속 6자리 인증번호를 앱에 입력 (Supabase에 SMTP를 연결하고 메일 양식에 {{ .Token }}을 넣었을 때만) */
+const MAIL_CODE=false;
+const LINK_URL=location.hash+"&"+location.search;
+const FROM_LINK=/access_token=|type=(signup|email|magiclink|invite)/.test(LINK_URL)||/[?&]code=/.test(location.search);
+const LINK_ERR=/error_code=|[#&?]error=/.test(LINK_URL);
 const SB_URL="https://qbkehxbdwhtqdkcnhsdy.supabase.co",SB_KEY="sb_publishable_Z4dMWj2wJhXa5fbJzGG5SQ_W53L99Sa";
 let sb=null,DB=false,dbWhy="";const APPV="db-5";
 function loadSB(){return new Promise(function(res){if(window.supabase)return res();var s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";s.onload=function(){res()};s.onerror=function(){res()};document.head.appendChild(s);setTimeout(res,6000)})}
@@ -540,7 +599,7 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",
 document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{
   document.querySelectorAll("nav button").forEach(x=>x.setAttribute("aria-selected",x===b));
   document.querySelectorAll(".panel").forEach(p=>p.hidden=p.id!==b.dataset.t);
-  var f=({hot:renderHot,chat:renderChat,me:renderMe})[b.dataset.t];if(f)f();
+  var f=({hot:renderHot,chat:renderChat,me:renderMe,borrow:refreshFeeds,lend:refreshFeeds,swap:refreshFeeds})[b.dataset.t];if(f)f();
 });
 
 /* 빌리기 */
@@ -548,8 +607,8 @@ function findFor(need,days,maxD,maxP){
   const nm=clean(need);
   return items.map(it=>{
     const ts=sim(nm,it.n+" "+it.t);
-    if(ts===0||it.d>maxD||it.p>maxP)return null;
-    const sc=ts*60+(1-it.d/maxD)*20+(1-it.p/maxP)*10+({상:10,중:6,하:2})[it.c]+(it.p===0?8:0);
+    if(ts===0||(it.d!=null&&it.d>maxD)||it.p>maxP)return null;
+    const sc=ts*60+(it.d==null?.5:1-it.d/maxD)*20+(1-it.p/maxP)*10+({상:10,중:6,하:2})[it.c]+(it.p===0?8:0);
     return{it,ts,sc:Math.min(99,Math.round(sc))};
   }).filter(Boolean).sort((a,b)=>b.sc-a.sc);
 }
@@ -567,9 +626,9 @@ $("#goBorrow").onclick=()=>{
     }else{
       r.slice(0,2).forEach((x,i)=>{
         const it=x.it,cost=it.p*days*n,d=it.v<=20000?0:Math.round(it.v*DEP[it.c]*n);
-        if(i===0){total+=cost;dep+=d;found++;co+=it.co*Math.min(n,it.q);dots.push({lat:it.lat,lng:it.lng,n:dots.length+1,name:it.n+" ("+it.o+"님, "+it.d+"km)"})}
+        if(i===0){total+=cost;dep+=d;found++;co+=it.co*Math.min(n,it.q);if(typeof it.lat==="number")dots.push({lat:it.lat,lng:it.lng,n:dots.length+1,name:it.n+" ("+it.o+"님, "+distTxt(it)+")"})}
         h+=`<div class="res ${i===0?"top":""}"><h3><span>${esc(it.n)}</span><span class="pct">${x.sc}% 일치</span></h3>
-        <div class="meta">${esc(it.o)}님${rateOf(it)}${it.sample?" (예시)":""} · ${it.d}km · 상태 ${it.c} · 보유 ${it.q}개</div><div class="hint" style="margin:0 0 8px">추천 이유: 이름 일치 ${Math.round(x.ts*100)}% · ${it.d}km · ${it.p?"하루 "+won(it.p):"무료"}</div>
+        <div class="meta">${esc(it.o)}님${rateOf(it)}${it.sample?" (예시)":""} · ${distTxt(it)} · 상태 ${it.c} · 보유 ${it.q}개</div><div class="hint" style="margin:0 0 8px">추천 이유: 이름 일치 ${Math.round(x.ts*100)}% · ${it.d}km · ${it.p?"하루 "+won(it.p):"무료"}</div>
         <span class="tag">${it.p?days+"일 "+won(cost):"나눔(무료)"}</span><span class="tag s">${d?"보증금 "+won(d):"보증금 면제"}</span>
         ${i===0?'<span class="tag">가장 알맞음</span>':""}
         ${n>it.q?`<p class="hint">요청 ${n}개 중 ${it.q}개만 가능해요.</p>`:""}
@@ -583,9 +642,106 @@ $("#goBorrow").onclick=()=>{
 };
 $("#borrowOut").onclick=e=>{
   const a=e.target.dataset;
-  if(a.ask!==undefined){const it=items[+a.ask];it.l++;dbDeal(it);deal(it.p?"빌림":"나눔",it.n,it.o,it.co,it.db?it.ownerId:null);say(it.db?it.ownerId:null,it.o,`안녕하세요! "${it.n}" 빌리고 싶어요.`);toast(`${it.o}님께 신청했어요. 채팅에서 이어가세요`)}
-  if(a.req){const[n,q]=a.req.split("|");reqs.unshift({n:q>1?n+" "+q+"개":n,who:"나",days:+$("#days").value||1,dist:+$("#dist").value||2});dbRequest(n,+q||1);toast("대여 요청을 등록했어요");e.target.disabled=true;e.target.textContent="등록됨"}
+  if(a.ask!==undefined)askItem(+a.ask);
+  if(a.req){const[n,q]=a.req.split("|");reqs.unshift({n:q>1?n+" "+q+"개":n,who:"나",mine:true,local:true,at:new Date().toISOString(),days:+$("#days").value||1,dist:+$("#dist").value||2});dbRequest(n,+q||1);renderFeeds();toast("대여 요청을 등록했어요");e.target.disabled=true;e.target.textContent="등록됨"}
 };
+
+
+/* 탭별 최신 글 목록 (빌리기: 이웃 물건 · 빌려주기: 이웃이 찾는 물건 · 교환: 교환 글) */
+let lastLoad=0,loadingFeeds=false;
+const distTxt=it=>it.d==null?"거리 미정":it.d+"km";
+function ago(s){if(!s)return "";const m=Math.floor((Date.now()-new Date(s))/60000);if(isNaN(m))return "";if(m<1)return "방금";if(m<60)return m+"분 전";const h=Math.floor(m/60);if(h<24)return h+"시간 전";const d=Math.floor(h/24);return d<30?d+"일 전":fmtDate(s)}
+const byNew=(a,b)=>String(b.at||"").localeCompare(String(a.at||""));
+function server(){return !!(DB&&me.id)}
+function feedHead(t){return `<div class="feedhd"><h2>${t}</h2>${server()?'<button class="btn sm ghost" data-refresh>새로고침</button>':""}</div>`}
+function demoNote(){return server()?"":'<p class="hint">시연 모드예요. 올린 글은 이 기기에만 저장되고 다른 계정에서는 보이지 않아요.</p>'}
+function renderFeeds(){
+  const fi=$("#feedItems"),fr=$("#feedReqs"),fs=$("#feedSwaps");if(!fi)return;
+  const its=items.filter(i=>server()?(i.db||i.o==="나"):(i.sample||i.o==="나")).sort(byNew).slice(0,30);
+  fi.innerHTML=feedHead("우리 동네 새 물건")+demoNote()+(its.length?its.map(it=>{
+    const i=items.indexOf(it),mine=it.o==="나",dp=it.v<=20000?0:Math.round(it.v*DEP[it.c]);
+    return `<div class="res"><h3><span>${esc(it.n)}</span>${mine?'<span class="tag">내 물건</span>':""}</h3>
+    <div class="meta">${mine?"내가 올린 물건":esc(it.o)+"님"+rateOf(it)}${it.sample?" (예시)":""} · ${distTxt(it)} · 상태 ${esc(it.c)} · ${it.q}개${it.at?" · "+ago(it.at):""}</div>
+    <span class="tag">${it.p?"하루 "+won(it.p):"나눔(무료)"}</span><span class="tag s">${dp?"보증금 "+won(dp):"보증금 면제"}</span>
+    ${mine?"":`<div style="margin-top:10px"><button class="btn sm" data-ask="${i}">대여 신청</button></div>`}</div>`}).join(""):`<div class="empty"><b>아직 올라온 물건이 없어요.</b>빌려주기 탭에서 첫 물건을 올려 보세요.</div>`);
+  const rq=reqs.filter(r=>server()?(r.db||r.who==="나"):true).sort(byNew).slice(0,30);
+  fr.innerHTML=feedHead("이웃이 찾는 물건")+demoNote()+(rq.length?rq.map(r=>{const i=reqs.indexOf(r),mine=r.who==="나";
+    return `<div class="res"><h3><span>${esc(r.n)}</span>${mine?'<span class="tag">내 요청</span>':""}</h3>
+    <div class="meta">${mine?"내가 올린 요청":esc(r.who)+"님"} · ${r.days}일 · ${r.dist}km 안${r.at?" · "+ago(r.at):""}</div>
+    ${mine?"":`<button class="btn sm" data-lendto="${i}">빌려줄 수 있어요</button>`}</div>`}).join(""):`<div class="empty"><b>지금 찾는 이웃이 없어요.</b>빌리기 탭에서 원하는 물건이 없을 때 대여 요청을 올릴 수 있어요.</div>`);
+  const sw=swaps.filter(x=>server()?(x.db||x.who==="나"):true).sort(byNew).slice(0,30);
+  fs.innerHTML=feedHead("올라온 교환 글")+demoNote()+(sw.length?sw.map(x=>{const i=swaps.indexOf(x),mine=x.who==="나";
+    return `<div class="res"><h3><span>${esc(x.have)} ↔ ${esc(x.want)}</span>${mine?'<span class="tag">내 글</span>':""}</h3>
+    <div class="meta">${mine?"내가 올린 교환 글":esc(x.who)+"님이 "+esc(x.have)+"을(를) 주고 "+esc(x.want)+"을(를) 원해요"}${x.at?" · "+ago(x.at):""}</div>
+    ${mine?"":`<button class="btn sm" data-swapto="${i}">교환 제안</button>`}</div>`}).join(""):`<div class="empty"><b>아직 교환 글이 없어요.</b>위에서 내 교환 글을 올려 보세요.</div>`);
+}
+async function refreshFeeds(force){
+  renderFeeds();
+  if(!server()||loadingFeeds)return;
+  if(force!==true&&Date.now()-lastLoad<8000)return;
+  loadingFeeds=true;
+  try{await loadAll();recalcDist();renderFeeds();if(force===true)toast("새 글을 불러왔어요")}finally{loadingFeeds=false}
+}
+function askItem(i){
+  const it=items[i];if(!it)return;
+  if(it.o==="나"||(it.ownerId&&me.id&&it.ownerId===me.id)){toast("내가 등록한 물건이에요");return}
+  it.l++;dbDeal(it);deal(it.p?"빌림":"나눔",it.n,it.o,it.co,it.db?it.ownerId:null);say(it.db?it.ownerId:null,it.o,`안녕하세요! "${it.n}" 빌리고 싶어요.`);toast(`${it.o}님께 신청했어요. 채팅에서 이어가세요`);
+}
+$("#feedItems").onclick=e=>{const a=e.target.dataset;if(a.refresh!==undefined)refreshCurrent(true);if(a.ask!==undefined)askItem(+a.ask)};
+$("#feedReqs").onclick=e=>{const a=e.target.dataset;if(a.refresh!==undefined){refreshCurrent(true);return}if(a.lendto===undefined)return;
+  const r=reqs[+a.lendto];if(!r||r.who==="나")return;deal("빌려줌",r.n,r.who,0,r.uid||null);say(r.uid||null,r.who,`"${r.n}" 빌려드릴 수 있어요!`);toast(r.who+"님에게 연락했어요. 채팅에서 이어가세요");e.target.disabled=true;e.target.textContent="연락함"};
+$("#feedSwaps").onclick=e=>{const a=e.target.dataset;if(a.refresh!==undefined){refreshCurrent(true);return}if(a.swapto===undefined)return;
+  const x=swaps[+a.swapto];if(!x||x.who==="나")return;const t=x.have+" ↔ "+x.want;deal("교환",t,x.who,10,x.uid||null);say(x.uid||null,x.who,`교환 글 보고 연락드려요: ${t}`);toast(x.who+"님에게 제안했어요. 채팅에서 이어가세요");e.target.disabled=true;e.target.textContent="제안함"};
+
+/* 새로고침: 지금 보고 있는 탭을 서버에서 다시 불러와요 (상단 버튼 · 끌어내리기 · 앱으로 돌아올 때) */
+let refreshing=null;
+function curTab(){const b=document.querySelector('nav button[aria-selected="true"]');return b?b.dataset.t:"borrow"}
+async function refreshGot(){
+  try{const r=await sb.from("reviews").select("*").eq("reviewee_id",me.id).order("created_at",{ascending:false}).limit(50);if(r.error)return;
+    const rows=r.data||[],nm=await nicks(Array.from(new Set(rows.map(x=>x.reviewer_id))));
+    got.length=0;rows.forEach(x=>got.push({who:nm[x.reviewer_id]||"이웃",s:x.rating,tags:x.tags||[],t:x.body||"",at:fmtDate(x.created_at)}))}catch(e){}
+}
+function redrawTab(t){renderFeeds();if(t==="hot")renderHot();if(t==="chat")renderChat();if(t==="me")renderMe()}
+function refreshCurrent(manual){
+  if(refreshing)return refreshing;
+  const t=curTab(),btn=$("#refreshBtn");
+  if(!server()){redrawTab(t);if(manual)toast("시연 모드라 새로 불러올 서버 글이 없어요");return Promise.resolve()}
+  btn.classList.add("spin");btn.setAttribute("aria-busy","true");
+  refreshing=(async()=>{
+    try{
+      await loadAll();recalcDist();lastLoad=Date.now();
+      if(t==="chat")await pollNew();
+      if(t==="me")await refreshGot();
+      redrawTab(t);if(manual)toast("새로 불러왔어요");
+    }catch(e){if(manual)toast("불러오지 못했어요. 잠시 후 다시 시도해 주세요")}
+    finally{btn.classList.remove("spin");btn.removeAttribute("aria-busy");refreshing=null}
+  })();
+  return refreshing;
+}
+$("#refreshBtn").onclick=()=>refreshCurrent(true);
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&!$("#app").hidden&&server()&&Date.now()-lastLoad>20000)refreshCurrent(false)});
+(function(){
+  const ind=$("#ptr"),ico=ind.querySelector("svg"),TH=70;let y0=null,x0=0,pull=0,on=false;
+  const skip=t=>!t||!t.closest||t.closest("#meMap,#resMap,#mapSign,.msgs,.modal,nav,input,textarea,select,button");
+  const reset=()=>{ind.style.transform="";ind.style.opacity="";ico.style.transform="";ind.classList.remove("ready")};
+  window.addEventListener("touchstart",e=>{
+    y0=null;if($("#app").hidden||!$("#rvSheet").hidden||refreshing||window.scrollY>0||e.touches.length!==1||skip(e.target))return;
+    y0=e.touches[0].clientY;x0=e.touches[0].clientX;pull=0;on=false;
+  },{passive:true});
+  window.addEventListener("touchmove",e=>{
+    if(y0==null)return;const dy=e.touches[0].clientY-y0,dx=Math.abs(e.touches[0].clientX-x0);
+    if(!on){if(dy>8&&dy>dx*1.5&&window.scrollY<=0)on=true;else{if(dy<0||dx>12)y0=null;return}}
+    pull=Math.max(0,Math.min(120,dy*.55));
+    ind.style.opacity=String(Math.min(1,pull/40));ind.style.transform=`translate(-50%,${pull}px)`;ico.style.transform=`rotate(${pull*3}deg)`;
+    ind.classList.toggle("ready",pull>=TH);
+  },{passive:true});
+  window.addEventListener("touchend",()=>{
+    if(y0==null)return;y0=null;const go=on&&pull>=TH;on=false;pull=0;
+    if(!go){reset();return}
+    ind.classList.add("busy");ind.style.opacity="1";ind.style.transform="translate(-50%,64px)";ico.style.transform="";
+    refreshCurrent(true).finally(()=>{ind.classList.remove("busy");reset()});
+  },{passive:true});
+})();
 
 /* 빌려주기 */
 let lastPhoto=null;
@@ -596,11 +752,11 @@ $("#lph").onchange=e=>{
 $("#goLend").onclick=()=>{
   const n=$("#ln").value.trim();
   if(!n){toast("빌려줄 물건 이름을 입력해 주세요");return}
-  const it={n,t:"",o:"나",d:0.1,lat:me.pos.lat,lng:me.pos.lng,co:5,p:+$("#lp").value||0,v:+$("#lv").value||0,c:$("#lc").value,q:+$("#lq").value||1,l:0};
+  const it={at:new Date().toISOString(),n,t:"",o:"나",d:0.1,lat:me.pos.lat,lng:me.pos.lng,co:5,p:+$("#lp").value||0,v:+$("#lv").value||0,c:$("#lc").value,q:+$("#lq").value||1,l:0};
   items.push(it);dbItem(it);
   const idx=log.push({n,c:it.c,before:lastPhoto,after:null})-1;
-  const m=reqs.map(r=>({r,s:sim(clean(r.n),n)})).filter(x=>x.s>0).sort((a,b)=>b.s-a.s);
-  let h=`<h2>등록했어요. 이제 빌리기 검색에도 나와요.</h2>`;
+  const m=reqs.filter(r=>!r.mine&&r.who!=="나").map(r=>({r,s:sim(clean(r.n),n)})).filter(x=>x.s>0).sort((a,b)=>b.s-a.s);
+  let h=`<h2>${DB&&me.id?"등록했어요. 이웃의 빌리기 화면에 바로 보여요.":"등록했어요. (시연 모드라 이 기기에서만 보여요)"}</h2>`;renderFeeds();
   h+=m.length?`<p class="hint">비슷한 대여 요청 ${m.length}건을 찾았어요.</p>`+m.map(x=>`<div class="res"><h3><span>${esc(x.r.n)}</span><span class="pct">${Math.round(x.s*100)}% 일치</span></h3><div class="meta">${esc(x.r.who)}님 · ${x.r.days}일 · ${x.r.dist}km</div><button class="btn sm" data-ok="${esc(x.r.who)}" data-uid="${esc(x.r.uid||"")}">${esc(x.r.who)}님에게 빌려주기</button></div>`).join(""):`<div class="empty"><b>지금 맞는 요청은 없어요.</b>요청이 올라오면 바로 알려 드릴게요.</div>`;
   h+=`<h2>대여 전후 상태 비교</h2><div class="res"><b>${esc(n)}</b><div class="cmp"><div>${lastPhoto?`<img alt="대여 전 사진" src="${lastPhoto}">`:"대여 전 사진 없음"}</div><div id="aft${idx}">반납 후 사진을 올려 주세요</div></div>
   <label for="af${idx}">반납 후 사진</label><input id="af${idx}" type="file" accept="image/*" data-after="${idx}"></div>`;
@@ -617,13 +773,13 @@ $("#lendOut").onclick=e=>{if(e.target.dataset.ok){const w=e.target.dataset.ok,u=
 $("#goSwap").onclick=()=>{
   const h=$("#sh").value.trim(),w=$("#sw").value.trim();
   if(!h||!w){toast("두 칸을 모두 입력해 주세요");return}
-  const m=swaps.map(s=>{const a=sim(clean(w),s.have),b=sim(clean(h),s.want);return{s,a,b,sc:a+b}}).filter(x=>x.sc>0).sort((x,y)=>y.sc-x.sc);
+  const m=swaps.filter(s=>!s.mine&&s.who!=="나").map(s=>{const a=sim(clean(w),s.have),b=sim(clean(h),s.want);return{s,a,b,sc:a+b}}).filter(x=>x.sc>0).sort((x,y)=>y.sc-x.sc);
   let o=m.length?m.map(x=>`<div class="res ${x.a>0&&x.b>0?"top":""}"><h3><span>${esc(x.s.who)}님</span><span class="pct">${x.a>0&&x.b>0?"서로 딱 맞아요":"한쪽만 맞아요"}</span></h3>
   <div class="meta">내게 필요한 것: ${esc(x.s.have)} · 상대가 원하는 것: ${esc(x.s.want)}</div>
   <button class="btn sm" data-sw="${esc(x.s.who)}" data-uid="${esc(x.s.uid||"")}">교환 제안하기</button></div>`).join(""):`<div class="empty"><b>아직 맞는 상대가 없어요.</b>교환 글을 올려 두면 맞는 사람이 나타날 때 알려 드려요.</div>`;
   o+=`<button class="btn alt" id="postSwap">내 교환 글 올리기</button>`;
   $("#swapOut").innerHTML=`<h2>교환 후보 ${m.length}명</h2>`+o;
-  $("#postSwap").onclick=()=>{swaps.unshift({have:h,want:w,who:"나"});dbSwap(h,w);toast("교환 글을 올렸어요");$("#postSwap").disabled=true};
+  $("#postSwap").onclick=()=>{swaps.unshift({have:h,want:w,who:"나",mine:true,local:true,at:new Date().toISOString()});dbSwap(h,w);renderFeeds();toast("교환 글을 올렸어요");$("#postSwap").disabled=true};
 };
 $("#swapOut").onclick=e=>{const w=e.target.dataset.sw;if(!w)return;const u=e.target.dataset.uid||null,x=$("#sh").value+" ↔ "+$("#sw").value;deal("교환",x,w,10,u);say(u,w,`교환 제안드려요: ${x}`);toast(w+"님에게 제안했어요. 채팅에서 이어가세요")};
 
@@ -922,13 +1078,13 @@ function setAuto(em){store.set("saji_auto",JSON.stringify({em,exp:Date.now()+30*
 function clearAuto(){store.del("saji_auto")}
 function getAuto(){try{const a=JSON.parse(store.get("saji_auto")||"null");return a&&a.exp>Date.now()?a.em:null}catch(e){return null}}
 function dbErr(e){return e&&e.message||""}
-function dbRequest(n,q){if(!DB||!me.id)return;sb.from("requests").insert({requester_id:me.id,name:n,qty:q,days:+$("#days").value||1,max_distance_km:+$("#dist").value||2}).then(function(r){if(r.error)toast("요청 저장에 실패했어요")})}
-function dbSwap(h,w){if(!DB||!me.id)return;sb.from("swaps").insert({owner_id:me.id,have:h,want:w}).then(function(r){if(r.error)toast("교환 글 저장에 실패했어요")})}
+function dbRequest(n,q){if(!DB||!me.id)return;sb.from("requests").insert({requester_id:me.id,name:n,qty:q,days:+$("#days").value||1,max_distance_km:+$("#dist").value||2}).then(function(r){if(r.error)toast("요청 저장에 실패했어요: "+dbErr(r.error).slice(0,60))})}
+function dbSwap(h,w){if(!DB||!me.id)return;sb.from("swaps").insert({owner_id:me.id,have:h,want:w}).then(function(r){if(r.error)toast("교환 글 저장에 실패했어요: "+dbErr(r.error).slice(0,60))})}
 async function dbItem(it){
   if(!DB||!me.id)return;
   const r=await sb.from("items").insert({owner_id:me.id,name:it.n,tags:it.n,qty:it.q,price_per_day:it.p,value:it.v,condition:it.c,lat:me.pos.lat,lng:me.pos.lng,co2_kg:it.co}).select().single();
-  if(r.error){toast("물건 저장에 실패했어요");return}
-  it.id=r.data.id;it.db=true;it.ownerId=me.id;
+  if(r.error){toast("물건 저장에 실패했어요: "+dbErr(r.error).slice(0,60));return}
+  it.id=r.data.id;it.db=true;it.ownerId=me.id;it.at=r.data.created_at||it.at;renderFeeds();
 }
 function dbDeal(it){
   if(!DB||!me.id||!it.db||it.ownerId===me.id)return;
@@ -947,11 +1103,14 @@ async function loadAll(){
     const ai=a.data||[],bi=b.data||[],ci=c.data||[];
     const nm=await nicks(Array.from(new Set([].concat(ai.map(x=>x.owner_id),bi.map(x=>x.requester_id),ci.map(x=>x.owner_id)))));
     for(let i=items.length-1;i>=0;i--)if(items[i].db)items.splice(i,1);
-    ai.filter(x=>x.lat!=null).forEach(x=>{const mine=x.owner_id===me.id;items.push({n:x.name,t:x.tags||"",o:mine?"나":(nm[x.owner_id]||"이웃"),d:0.1,lat:x.lat,lng:x.lng,p:x.price_per_day,v:x.value,c:x.condition,q:x.qty,l:0,co:Number(x.co2_kg)||0,db:true,id:x.id,ownerId:x.owner_id})});
+    ai.forEach(x=>{const mine=x.owner_id===me.id;items.push({at:x.created_at,n:x.name,t:x.tags||"",o:mine?"나":(nm[x.owner_id]||"이웃"),d:x.lat!=null?0.1:null,lat:x.lat!=null?x.lat:null,lng:x.lng!=null?x.lng:null,p:x.price_per_day,v:x.value,c:x.condition,q:x.qty,l:0,co:Number(x.co2_kg)||0,db:true,id:x.id,ownerId:x.owner_id})});
     for(let i=reqs.length-1;i>=0;i--)if(reqs[i].db)reqs.splice(i,1);
-    bi.filter(x=>x.requester_id!==me.id).forEach(x=>reqs.unshift({n:x.name+(x.qty>1?" "+x.qty+"개":""),uid:x.requester_id,who:nm[x.requester_id]||"이웃",days:x.days,dist:Number(x.max_distance_km)||2,db:true}));
+    bi.forEach(x=>{const mine=x.requester_id===me.id;reqs.push({n:x.name+(x.qty>1?" "+x.qty+"개":""),uid:x.requester_id,who:mine?"나":(nm[x.requester_id]||"이웃"),mine:mine,days:x.days,dist:Number(x.max_distance_km)||2,db:true,at:x.created_at})});
+    for(let i=reqs.length-1;i>=0;i--)if(reqs[i].local&&reqs[i].mine)reqs.splice(i,1);
     for(let i=swaps.length-1;i>=0;i--)if(swaps[i].db)swaps.splice(i,1);
-    ci.filter(x=>x.owner_id!==me.id).forEach(x=>swaps.unshift({have:x.have,want:x.want,uid:x.owner_id,who:nm[x.owner_id]||"이웃",db:true}));
+    ci.forEach(x=>{const mine=x.owner_id===me.id;swaps.push({have:x.have,want:x.want,uid:x.owner_id,who:mine?"나":(nm[x.owner_id]||"이웃"),mine:mine,db:true,at:x.created_at})});
+    for(let i=swaps.length-1;i>=0;i--)if(swaps[i].local&&swaps[i].mine)swaps.splice(i,1);
+    lastLoad=Date.now();
     const owners=Array.from(new Set(ai.map(x=>x.owner_id)));
     for(const k in rates)delete rates[k];
     if(owners.length){const rv=await sb.from("reviews").select("reviewee_id,rating").in("reviewee_id",owners).limit(1000);(rv.data||[]).forEach(r=>{const a=rates[r.reviewee_id]||(rates[r.reviewee_id]=[0,0]);a[0]+=r.rating;a[1]++})}
@@ -990,8 +1149,8 @@ function view(v){["intro","auth","app"].forEach(id=>$("#"+id).hidden=id!==v);win
 const EYE=`<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>`,EYEOFF=`<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><path d="M3 3l18 18"/><circle cx="12" cy="12" r="3"/></svg>`;
 function resetEyes(){document.querySelectorAll("[data-eye]").forEach(b=>{$("#"+b.dataset.eye).type="password";b.innerHTML=EYE;b.setAttribute("aria-pressed","false");b.setAttribute("aria-label","비밀번호 보기")})}
 $("#auth").addEventListener("click",e=>{const b=e.target.closest("[data-eye]");if(!b)return;const i=$("#"+b.dataset.eye),show=i.type==="password";i.type=show?"text":"password";b.innerHTML=show?EYEOFF:EYE;b.setAttribute("aria-pressed",String(show));b.setAttribute("aria-label",show?"비밀번호 숨기기":"비밀번호 보기")});
-function setAuth(m){resetEyes();document.querySelectorAll("#aseg button").forEach(b=>b.setAttribute("aria-selected",b.dataset.m===m));$("#fLogin").hidden=m!=="in";$("#fSign").hidden=m!=="up";$("#lgErr").textContent="";$("#suErr").textContent="";if(m==="up")setTimeout(drawSignMap,80)}
-function enter(u){me.name=u.name;me.town=u.town||"우리 동네";me.pos=normPos(u.pos);me.email=u.email||"";recalcDist();$("#who").textContent=u.name+"님";$("#townTxt").textContent=me.town;view("app");toast("환영해요, "+u.name+"님")}
+function setAuth(m){resetEyes();document.querySelectorAll("#aseg button").forEach(b=>b.setAttribute("aria-selected",b.dataset.m===m));$("#fLogin").hidden=m!=="in";$("#fSign").hidden=m!=="up";$("#fVerify").hidden=true;$("#aseg").hidden=false;if(window.__vfStop)window.__vfStop();$("#lgErr").textContent="";$("#suErr").textContent="";if(m==="up")setTimeout(drawSignMap,80)}
+function enter(u){me.name=u.name;me.town=u.town||"우리 동네";me.pos=normPos(u.pos);me.email=u.email||"";recalcDist();$("#who").textContent=u.name+"님";$("#townTxt").textContent=me.town;renderFeeds();view("app");toast("환영해요, "+u.name+"님")}
 window.__setAuth=setAuth;
 const gd={code:null,exp:0,tries:0,ok:false,name:"",email:"",contact:"",mode:"mail",pending:false};
 function gdReset(){gd.code=null;gd.ok=false;gd.tries=0;gd.pending=false;$("#gdBox").hidden=true;$("#gtBox").hidden=true;$("#gdErr").textContent="";$("#gdState").textContent="";$("#gd-c").value="";$("#gt-pin").value=""}
@@ -1033,12 +1192,12 @@ $("#gdOk").onclick=()=>{
   gd.ok=true;gd.code=null;er.textContent="";$("#gdBox").hidden=true;$("#gdState").textContent="보호자 인증이 완료됐어요. 실제 서비스에서는 휴대폰 본인인증 같은 법적 확인 절차가 더해져요.";
 };
 $("#auth").onchange=e=>{const d=e.target.dataset.pw;if(d)d.split(",").forEach(id=>$("#"+id).type=e.target.checked?"text":"password")};
-$("#auth").onkeydown=e=>{if(e.key==="Enter"&&e.target.tagName==="INPUT"&&e.target.type!=="checkbox")(!$("#fLogin").hidden?$("#doLogin"):$("#doSign")).click()};
+$("#auth").onkeydown=e=>{if(e.key==="Enter"&&e.target.tagName==="INPUT"&&e.target.type!=="checkbox")(!$("#fVerify").hidden?$("#doVerify"):!$("#fLogin").hidden?$("#doLogin"):$("#doSign")).click()};
 $("#doLogin").onclick=async()=>{
   const em=$("#lg-e").value.trim().toLowerCase(),pw=$("#lg-p").value,u=users()[em],er=$("#lgErr");
   if(!em||!pw){er.textContent="이메일과 비밀번호를 입력해 주세요.";return}
   await dbReady;
-  if(DB){const btn=$("#doLogin");btn.disabled=true;try{const r=await sb.auth.signInWithPassword({email:em,password:pw});if(r.error){er.textContent=/confirm/i.test(dbErr(r.error))?"이메일 확인이 아직 안 됐어요. 메일의 링크를 눌러 주세요.":"이메일 또는 비밀번호가 맞지 않아요.";return}er.textContent="";$("#lg-p").value="";if($("#lg-auto").checked)setAuto(em);else clearAuto();await enterDB(r.data.user)}catch(x){er.textContent="서버에 연결하지 못했어요. 잠시 후 다시 시도해 주세요."}finally{btn.disabled=false}return}
+  if(DB){const btn=$("#doLogin");btn.disabled=true;try{const r=await sb.auth.signInWithPassword({email:em,password:pw});if(r.error){if(/confirm/i.test(dbErr(r.error))){er.textContent="";showVerify(em,"login",pw);$("#lg-p").value="";return}er.textContent="이메일 또는 비밀번호가 맞지 않아요.";return}er.textContent="";$("#lg-p").value="";if($("#lg-auto").checked)setAuto(em);else clearAuto();await enterDB(r.data.user)}catch(x){er.textContent="서버에 연결하지 못했어요. 잠시 후 다시 시도해 주세요."}finally{btn.disabled=false}return}
   if(!u||u.h!==await hash(pw)){er.textContent="이메일 또는 비밀번호가 맞지 않아요.";return}
   er.textContent="";$("#lg-p").value="";if($("#lg-auto").checked)setAuto(em);else clearAuto();enter(Object.assign({email:em},u));
 };
@@ -1051,20 +1210,101 @@ $("#doSign").onclick=async()=>{
     const r=await sb.auth.signUp({email:em,password:p,options:{data:{nickname:n,town:$("#su-t").value.trim()||"우리 동네",lat:pick.lat,lng:pick.lng,is_under14:u14}}});
     if(r.error){const m=dbErr(r.error);er.textContent=/already|registered/i.test(m)?"이미 가입된 이메일이에요. 로그인해 주세요.":/password/i.test(m)?"비밀번호 조건을 확인해 주세요.":/rate|limit/i.test(m)?"잠시 후 다시 시도해 주세요.":"가입에 실패했어요. ("+m.slice(0,80)+")";return}
     $("#su-p").value=$("#su-p2").value="";
-    if(!r.data.session){setAuth("in");$("#lgErr").textContent="가입 확인 메일을 보냈어요. 메일의 링크를 누른 뒤 로그인해 주세요.";return}
+    if(!r.data.session){er.textContent="";showVerify(em,"signup",p);return}
     er.textContent="";await enterDB(r.data.user)
   }catch(x){er.textContent="서버에 연결하지 못했어요. 잠시 후 다시 시도해 주세요."}finally{btn.disabled=false}return}
   const u={name:n,town:$("#su-t").value.trim()||"우리 동네",h:await hash(p),u14,pos:pick,guardian:u14?{name:gd.name,method:gd.mode,contact:gd.contact,at:Date.now()}:null};
-  all[em]=u;store.set("saji_users",JSON.stringify(all));
-  er.textContent="";$("#su-p").value=$("#su-p2").value="";enter(Object.assign({email:em},u));
+  er.textContent="";$("#su-p").value=$("#su-p2").value="";pendingDemo={em:em,u:u};showVerify(em,"demo");
 };
+
+/* 메일 인증번호 확인 화면 */
+const vf={email:"",mode:"",pw:"",code:null,exp:0,tries:0,cool:0,timer:null};let pendingDemo=null;
+window.__vfStop=()=>{clearInterval(vf.timer)};
+function vfDraw(){
+  const i=$("#vf-code"),v=i.value.replace(/\D/g,"").slice(0,6);if(i.value!==v)i.value=v;
+  const f=document.activeElement===i;
+  document.querySelectorAll("#otpBox span").forEach((sp,k)=>{sp.textContent=v[k]||"";sp.classList.toggle("cur",f&&k===Math.min(v.length,5))});
+}
+function vfCool(sec){
+  vf.cool=Date.now()+sec*1000;clearInterval(vf.timer);const b=$("#vfResend");
+  const tick=()=>{const l=Math.ceil((vf.cool-Date.now())/1000);if(l>0){b.disabled=true;b.textContent="다시 받기 ("+l+"초)"}else{b.disabled=false;b.textContent=(MAIL_CODE||vf.mode==="demo")?"인증번호 다시 받기":"인증 메일 다시 받기";clearInterval(vf.timer)}};
+  tick();if(sec>0)vf.timer=setInterval(tick,1000);
+}
+function vfDemoCode(){
+  let r;try{r=crypto.getRandomValues(new Uint32Array(1))[0]}catch(e){r=Math.floor(Math.random()*4e9)}
+  vf.code=String(100000+r%900000);vf.exp=Date.now()+10*60000;vf.tries=0;
+  const b=$("#vfSim");b.hidden=false;
+  b.innerHTML='<b>시연용 알림</b>'+esc(vf.email)+'(으)로 보낸 인증번호라고 가정해요: <span style="font-size:20px;font-weight:800;letter-spacing:.12em">'+vf.code+'</span><br><small>실제 서비스에서는 화면에 보이지 않고 메일로만 받아요. 유효 시간은 10분이에요.</small>';
+}
+function showVerify(email,mode,pw){
+  vf.email=email;vf.mode=mode;vf.pw=pw||"";
+  const link=!MAIL_CODE&&mode!=="demo";
+  $("#otpBox").hidden=link;$("#doVerify").textContent=link?"인증을 마쳤어요":"인증하고 시작하기";
+  $("#vfHint").innerHTML=link?"메일이 안 보이면 스팸함도 확인해 주세요.<br>링크는 휴대폰 메일 앱에서 눌러도 돼요.":"메일이 안 보이면 스팸함도 확인해 주세요.<br>인증번호 6자리를 넣으면 바로 확인돼요.";
+  $("#aseg").hidden=true;$("#fLogin").hidden=true;$("#fSign").hidden=true;$("#fVerify").hidden=false;
+  const LINKTXT="메일 제목 <b>'Confirm your email address'</b> 속<br><b>'Confirm email address'</b> 링크를 누른 뒤 아래 버튼을 눌러 주세요.";
+  $("#vfLead").innerHTML=link?(mode==="login"?`<b>${esc(email)}</b> 계정은 아직 메일 인증 전이에요.<br>`:`<b>${esc(email)}</b>(으)로 인증 메일을 보냈어요.<br>`)+LINKTXT
+    :(mode==="login"?`<b>${esc(email)}</b> 계정은 아직 메일 인증 전이에요.<br>메일로 받은 인증번호 6자리를 입력해 주세요.`:`<b>${esc(email)}</b>(으)로<br>인증번호 6자리를 보냈어요.`);
+  $("#vf-code").value="";$("#vfErr").textContent="";$("#vfSim").hidden=true;
+  if(mode==="demo")vfDemoCode();
+  vfCool(mode==="login"?0:60);
+  window.scrollTo(0,0);vfDraw();setTimeout(()=>{$("#vf-code").focus();vfDraw()},80);
+}
+async function doVerify(){
+  if(!MAIL_CODE&&vf.mode!=="demo"){
+    const er=$("#vfErr"),btn=$("#doVerify");if(btn.disabled)return;
+    if(!vf.pw){er.textContent="로그인 화면에서 이메일과 비밀번호로 다시 로그인해 주세요.";return}
+    btn.disabled=true;
+    try{
+      const r=await sb.auth.signInWithPassword({email:vf.email,password:vf.pw});
+      if(r.error){er.textContent=/confirm/i.test(dbErr(r.error))?"아직 인증 전이에요. 메일 속 링크를 눌렀는지 확인해 주세요.":"로그인하지 못했어요. ("+dbErr(r.error).slice(0,50)+")";return}
+      er.textContent="";vf.pw="";clearInterval(vf.timer);await enterDB(r.data.user);setTimeout(()=>toast("메일 인증을 마쳤어요"),2300);
+    }catch(x){er.textContent="서버에 연결하지 못했어요. 잠시 후 다시 시도해 주세요."}finally{btn.disabled=false}
+    return;
+  }
+  const code=$("#vf-code").value.replace(/\D/g,""),er=$("#vfErr");
+  if(code.length!==6){er.textContent="인증번호 6자리를 입력해 주세요.";return}
+  if(vf.mode==="demo"){
+    if(Date.now()>vf.exp){er.textContent="인증번호 시간이 지났어요. 다시 받아 주세요.";return}
+    if(vf.tries>=5){er.textContent="시도 횟수를 넘었어요. 인증번호를 다시 받아 주세요.";return}
+    if(code!==vf.code){vf.tries++;er.textContent="인증번호가 맞지 않아요. (남은 시도 "+(5-vf.tries)+"회)";return}
+    const p=pendingDemo;if(!p){setAuth("up");return}
+    const all=users();all[p.em]=p.u;store.set("saji_users",JSON.stringify(all));pendingDemo=null;clearInterval(vf.timer);
+    enter(Object.assign({email:p.em},p.u));setTimeout(()=>toast("메일 인증을 마쳤어요"),2300);return;
+  }
+  const btn=$("#doVerify");if(btn.disabled)return;btn.disabled=true;
+  try{
+    let r=await sb.auth.verifyOtp({email:vf.email,token:code,type:"email"});
+    if(r.error||!r.data||!r.data.user)r=await sb.auth.verifyOtp({email:vf.email,token:code,type:"signup"});
+    if(r.error||!r.data||!r.data.user){const m=dbErr(r.error);er.textContent=/rate|429|too many/i.test(m)?"시도가 너무 많아요. 잠시 후 다시 해 주세요.":"인증번호가 맞지 않거나 시간이 지났어요. 다시 받아 주세요.";return}
+    er.textContent="";clearInterval(vf.timer);await enterDB(r.data.user);setTimeout(()=>toast("메일 인증을 마쳤어요"),2300);
+  }catch(x){er.textContent="서버에 연결하지 못했어요. 잠시 후 다시 시도해 주세요."}finally{btn.disabled=false}
+}
+async function vfResend(){
+  if(Date.now()<vf.cool)return;const er=$("#vfErr");
+  if(vf.mode==="demo"){vfDemoCode();$("#vf-code").value="";vfDraw();er.textContent="";vfCool(30);toast("인증번호를 다시 보냈어요");return}
+  const b=$("#vfResend");b.disabled=true;
+  try{
+    const r=await sb.auth.resend({type:"signup",email:vf.email});
+    if(r.error){const m=dbErr(r.error);er.textContent=/rate|limit|second|429|too many/i.test(m)?"메일은 잠시 후 다시 보낼 수 있어요. (기본 메일 발송은 1시간에 2통까지예요)":"메일을 보내지 못했어요. ("+m.slice(0,60)+")";vfCool(60);return}
+    er.textContent="";$("#vf-code").value="";vfDraw();vfCool(60);toast(MAIL_CODE?"인증번호를 다시 보냈어요. 메일함을 확인해 주세요":"인증 메일을 다시 보냈어요. 메일함을 확인해 주세요");
+  }catch(x){er.textContent="서버에 연결하지 못했어요. 잠시 후 다시 시도해 주세요.";b.disabled=false}
+}
+$("#vf-code").addEventListener("input",()=>{vfDraw();$("#vfErr").textContent="";if($("#vf-code").value.length===6)doVerify()});
+$("#vf-code").addEventListener("focus",vfDraw);$("#vf-code").addEventListener("blur",vfDraw);
+$("#doVerify").onclick=doVerify;$("#vfResend").onclick=vfResend;
+$("#vfBack").onclick=()=>{pendingDemo=null;vf.pw="";setAuth(vf.mode==="login"?"in":"up")};
 $("#logout").onclick=()=>{stopChat();if(DB&&sb)sb.auth.signOut();me.id=null;clearAuto();cur=null;pick=null;view("intro")};
 store.del("saji_session");
 (async function(){
   await dbReady;
   if(DB){
     const mh=$("#modeHint");if(mh)mh.textContent="계정과 거래 정보는 서버에 안전하게 저장돼요. ("+APPV+")";
-    try{const g=await sb.auth.getSession(),ss=g.data&&g.data.session;if(ss&&getAuto()===ss.user.email){await enterDB(ss.user)}else if(ss){await sb.auth.signOut()}}catch(e){}
+    try{const g=await sb.auth.getSession(),ss=g.data&&g.data.session;
+      if(ss&&(getAuto()===ss.user.email||FROM_LINK)){await enterDB(ss.user);if(FROM_LINK)setTimeout(()=>toast("메일 인증을 마쳤어요. 환영해요!"),2600)}
+      else if(ss){await sb.auth.signOut()}}catch(e){}
+    if(LINK_ERR)setTimeout(()=>toast("인증 링크가 만료됐거나 이미 쓰였어요. 로그인하면 메일을 다시 받을 수 있어요"),2600);
+    if(FROM_LINK||LINK_ERR){try{history.replaceState(null,"",location.pathname)}catch(e){}}
     return;
   }
   {const mh=$("#modeHint");if(mh)mh.textContent="시연용 모드예요. 계정 정보는 이 기기의 브라우저에만 저장돼요. ["+(dbWhy||"서버 미연결")+"] ("+APPV+")"}
