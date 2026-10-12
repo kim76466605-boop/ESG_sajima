@@ -149,7 +149,7 @@ nav .bd{position:absolute;top:2px;left:calc(50% + 5px);margin:0}
 .empty b{display:block;font-size:15px;margin-bottom:2px}
 .empty small{color:var(--mute)}
 
-/* 꼬리표 칩: 가격 · 보증금 · 거래 종류 */
+/* 꼬리표 칩: 가격 · 상태 · 거래 종류 */
 .tag{--hole:var(--surface);position:relative;display:inline-flex;align-items:center;height:24px;padding:0 9px 0 17px;margin:2px 4px 2px 0;font-size:12px;font-weight:600;letter-spacing:-.01em;line-height:1;color:var(--kraft-ink);background:var(--kraft);border-radius:0 6px 6px 0;-webkit-clip-path:polygon(8px 0,100% 0,100% 100%,8px 100%,0 50%);clip-path:polygon(8px 0,100% 0,100% 100%,8px 100%,0 50%);white-space:nowrap;vertical-align:middle}
 .tag::before{content:"";position:absolute;left:7px;top:50%;width:5px;height:5px;margin-top:-2.5px;border-radius:50%;background:var(--hole)}
 .tag.s{background:var(--soft);color:var(--mute)}
@@ -248,6 +248,17 @@ html,body{overscroll-behavior-y:contain}
 .feedhd{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:30px 2px 4px}
 .feedhd h2{margin:0}
 .feedhd .btn.sm{min-height:34px;padding:6px 10px;font-size:13px}
+
+/* 반납 확인 시트 */
+.retopts{display:grid;gap:8px;margin-top:14px}
+.retopts button{display:block;width:100%;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:12px 14px;font-size:15px;font-weight:700;color:var(--ink);cursor:pointer}
+.retopts button small{display:block;margin-top:2px;font-size:13px;font-weight:500;color:var(--mute)}
+.retopts button[aria-checked=true]{border-color:var(--go);background:var(--go-soft)}
+.retopts button.bad[aria-checked=true]{border-color:#E5484D;background:#FDECEA}
+.retguide{margin-top:12px;border-radius:14px;background:var(--soft);padding:12px 14px;font-size:14px;line-height:1.6}
+.chatact{display:flex;gap:8px;margin-top:10px}
+.chatact .btn.sm{flex:1;min-height:40px}
+.tag.warn{background:#FDECEA;color:#B42318}
 
 /* 후기 작성 시트 */
 .modal{position:fixed;inset:0;z-index:60;display:flex;align-items:flex-end;justify-content:center}
@@ -438,7 +449,7 @@ input[type=checkbox]:focus{box-shadow:none}
 <input id="lph" class="vh" type="file" accept="image/*">
 <label for="lph" class="photo" id="lphBox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6h1.8l1.4-2h4.6l1.4 2h1.8A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5z"/><circle cx="12" cy="12.5" r="3.5"/></svg><span id="lphTxt">대여 전 사진 올리기</span><small>반납할 때 이 사진과 나란히 비교해요</small></label>
 <button class="btn" id="goLend">물건 등록하고 요청 찾기</button>
-<p class="hint">하루 가격을 0원으로 하면 나눔으로 올라가요. 새 제품 2만 원 이하는 보증금이 면제돼요. 사진은 촬영 시각과 함께 남기고 반납 때 양쪽이 확인해요. 만 14세 미만은 보호자 동의 후 이용하고, 거래는 학교·공공장소에서 해요.</p>
+<p class="hint">하루 가격을 0원으로 하면 나눔으로 올라가요. 보증금은 받지 않아요. 대신 대여 전 사진을 남기고, 돌려받을 때 채팅의 '반납 확인'으로 상태를 기록해요. 만 14세 미만은 보호자 동의 후 이용하고, 거래는 학교·공공장소에서 해요.</p>
 </div>
 <div id="lendOut"></div>
 <div id="feedReqs"></div>
@@ -470,6 +481,25 @@ input[type=checkbox]:focus{box-shadow:none}
 <section class="panel" id="me" hidden><div id="meOut"></div></section>
 </div>
 </div>
+<div id="retSheet" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="retTitle">
+<div class="m-back" data-close></div>
+<div class="m-box">
+<div class="m-grip" aria-hidden="true"></div>
+<h2 id="retTitle">돌려받은 물건은 괜찮나요?</h2>
+<p class="hint" style="margin-top:4px">대여 전 사진과 비교해서 골라 주세요. 결과는 채팅에 기록으로 남아 두 사람 모두 볼 수 있어요.</p>
+<label for="retItem">물건</label><input id="retItem" maxlength="60" placeholder="예: 4인용 텐트">
+<div class="retopts" id="retOpts" role="radiogroup" aria-label="반납 상태">
+<button type="button" role="radio" aria-checked="false" data-r="ok">이상 없어요<small>대여 전과 같아요</small></button>
+<button type="button" role="radio" aria-checked="false" data-r="wear">사용 흔적만 있어요<small>작은 긁힘, 소모품 사용 · 책임 없음</small></button>
+<button type="button" role="radio" aria-checked="false" data-r="part" class="bad">일부 파손 · 부품 분실<small>수리비나 부품값을 협의해요</small></button>
+<button type="button" role="radio" aria-checked="false" data-r="broken" class="bad">못 쓰게 됐거나 분실<small>중고 시세 기준으로 협의해요</small></button>
+</div>
+<div class="retguide" id="retGuide" hidden></div>
+<label for="retNote">자세한 내용 (선택)</label><textarea id="retNote" maxlength="200" rows="2" placeholder="예: 충전기가 빠져 있어요"></textarea>
+<div class="err" id="retErr" role="alert"></div>
+<button class="btn" id="retSend">반납 확인 남기기</button>
+<button class="btn ghost" data-close>닫기</button>
+</div></div>
 <div id="rvSheet" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="rvTitle">
 <div class="m-back" data-close></div>
 <div class="m-box">
@@ -581,7 +611,6 @@ const swaps=[
 {have:"스케치북 세트",want:"카탄 보드게임",who:"하준"}
 ];
 const log=[];
-const DEP={상:.3,중:.2,하:.1};
 const won=n=>n.toLocaleString("ko-KR")+"원";
 const bi=s=>{s=s.replace(/\s/g,"");const r=[];for(let i=0;i<s.length-1;i++)r.push(s.slice(i,i+2));return r};
 function clean(s){return s.replace(/\d+\s*(개|명|대|벌|세트|장)?/g,"").trim()}
@@ -617,7 +646,7 @@ $("#goBorrow").onclick=()=>{
   recalcDist();const days=Math.max(1,+$("#days").value||1),maxD=+$("#dist").value||2,maxP=+$("#maxp").value||5000;
   const out=$("#borrowOut");out.innerHTML="";
   if(!needs.length){out.innerHTML='<p class="empty"><b>필요한 물건을 입력해 주세요.</b>예: 텐트, 의자 2개</p>';return}
-  let total=0,dep=0,found=0,co=0;const dots=[];
+  let total=0,found=0,co=0;const dots=[];
   needs.forEach(need=>{
     const r=findFor(need,days,maxD,maxP),n=qty(need);
     let h=`<div class="need">${esc(clean(need))} ${n>1?n+"개":""}</div>`;
@@ -625,11 +654,11 @@ $("#goBorrow").onclick=()=>{
       h+=`<div class="empty"><b>조건에 맞는 물건이 아직 없어요.</b>대여 요청을 올리면 가진 사람에게 알림이 가요.<br><button class="btn alt sm" data-req="${esc(clean(need))}|${n}" style="margin-top:10px">대여 요청 등록</button></div>`;
     }else{
       r.slice(0,2).forEach((x,i)=>{
-        const it=x.it,cost=it.p*days*n,d=it.v<=20000?0:Math.round(it.v*DEP[it.c]*n);
-        if(i===0){total+=cost;dep+=d;found++;co+=it.co*Math.min(n,it.q);if(typeof it.lat==="number")dots.push({lat:it.lat,lng:it.lng,n:dots.length+1,name:it.n+" ("+it.o+"님, "+distTxt(it)+")"})}
+        const it=x.it,cost=it.p*days*n;
+        if(i===0){total+=cost;found++;co+=it.co*Math.min(n,it.q);if(typeof it.lat==="number")dots.push({lat:it.lat,lng:it.lng,n:dots.length+1,name:it.n+" ("+it.o+"님, "+distTxt(it)+")"})}
         h+=`<div class="res ${i===0?"top":""}"><h3><span>${esc(it.n)}</span><span class="pct">${x.sc}% 일치</span></h3>
         <div class="meta">${esc(it.o)}님${rateOf(it)}${it.sample?" (예시)":""} · ${distTxt(it)} · 상태 ${it.c} · 보유 ${it.q}개</div><div class="hint" style="margin:0 0 8px">추천 이유: 이름 일치 ${Math.round(x.ts*100)}% · ${it.d}km · ${it.p?"하루 "+won(it.p):"무료"}</div>
-        <span class="tag">${it.p?days+"일 "+won(cost):"나눔(무료)"}</span><span class="tag s">${d?"보증금 "+won(d):"보증금 면제"}</span>
+        <span class="tag">${it.p?days+"일 "+won(cost):"나눔(무료)"}</span><span class="tag s">보증금 없음</span>
         ${i===0?'<span class="tag">가장 알맞음</span>':""}
         ${n>it.q?`<p class="hint">요청 ${n}개 중 ${it.q}개만 가능해요.</p>`:""}
         <div style="margin-top:10px"><button class="btn sm" data-ask="${items.indexOf(it)}">대여 신청</button></div></div>`;
@@ -638,7 +667,7 @@ $("#goBorrow").onclick=()=>{
     out.insertAdjacentHTML("beforeend",h);
   });
   if(dots.length){out.insertAdjacentHTML("beforeend",'<div class="need">지도에서 보기</div><div id="resMap"></div><p class="hint">'+dots.map(d=>d.n+". "+esc(d.name)).join(" · ")+" · 검은 점이 내 위치예요.</p>");drawMap($("#resMap"),me.pos,dots)}
-  if(found)out.insertAdjacentHTML("afterbegin",`<div class="res" style="margin-top:18px;background:var(--go-soft)"><b>추천 묶음 ${found}가지</b><br>대여비 합계 ${won(total)} · 보증금 ${won(dep)} (반납 후 돌려받아요)<br><span class="hint">새 물건 ${found}개를 사지 않으면 약 ${co}kg CO₂e를 줄이는 효과예요(예시 추정치). AI 추천은 참고용이며 최종 결정은 직접 해 주세요.</span></div>`);
+  if(found)out.insertAdjacentHTML("afterbegin",`<div class="res" style="margin-top:18px;background:var(--go-soft)"><b>추천 묶음 ${found}가지</b><br>대여비 합계 ${won(total)} · 보증금 없음<br><span class="hint">새 물건 ${found}개를 사지 않으면 약 ${co}kg CO₂e를 줄이는 효과예요(예시 추정치). AI 추천은 참고용이며 최종 결정은 직접 해 주세요.</span></div>`);
 };
 $("#borrowOut").onclick=e=>{
   const a=e.target.dataset;
@@ -659,10 +688,10 @@ function renderFeeds(){
   const fi=$("#feedItems"),fr=$("#feedReqs"),fs=$("#feedSwaps");if(!fi)return;
   const its=items.filter(i=>server()?(i.db||i.o==="나"):(i.sample||i.o==="나")).sort(byNew).slice(0,30);
   fi.innerHTML=feedHead("우리 동네 새 물건")+demoNote()+(its.length?its.map(it=>{
-    const i=items.indexOf(it),mine=it.o==="나",dp=it.v<=20000?0:Math.round(it.v*DEP[it.c]);
+    const i=items.indexOf(it),mine=it.o==="나";
     return `<div class="res"><h3><span>${esc(it.n)}</span>${mine?'<span class="tag">내 물건</span>':""}</h3>
     <div class="meta">${mine?"내가 올린 물건":esc(it.o)+"님"+rateOf(it)}${it.sample?" (예시)":""} · ${distTxt(it)} · 상태 ${esc(it.c)} · ${it.q}개${it.at?" · "+ago(it.at):""}</div>
-    <span class="tag">${it.p?"하루 "+won(it.p):"나눔(무료)"}</span><span class="tag s">${dp?"보증금 "+won(dp):"보증금 면제"}</span>
+    <span class="tag">${it.p?"하루 "+won(it.p):"나눔(무료)"}</span><span class="tag s">보증금 없음</span>
     ${mine?"":`<div style="margin-top:10px"><button class="btn sm" data-ask="${i}">대여 신청</button></div>`}</div>`}).join(""):`<div class="empty"><b>아직 올라온 물건이 없어요.</b>빌려주기 탭에서 첫 물건을 올려 보세요.</div>`);
   const rq=reqs.filter(r=>server()?(r.db||r.who==="나"):true).sort(byNew).slice(0,30);
   fr.innerHTML=feedHead("이웃이 찾는 물건")+demoNote()+(rq.length?rq.map(r=>{const i=reqs.indexOf(r),mine=r.who==="나";
@@ -788,7 +817,7 @@ function renderHot(){
   const s=[...items].sort((a,b)=>b.l-a.l).slice(0,5),mx=s[0].l,tl=items.reduce((a,b)=>a+b.l,0),co=items.reduce((a,b)=>a+b.l*b.co,0);
   $("#hotOut").innerHTML=`<div class="stats"><div><b>${tl}</b>대여·나눔 거래</div><div><b>${tl}</b>사지 않은 새 물건</div><div><b>${co}kg</b>추정 CO₂e 절감</div></div>
   <h2>가장 활발한 물건</h2>${s.map(x=>`<div class="bar"><span>${esc(x.n.slice(0,9))}</span><i style="width:${Math.round(x.l/mx*100)}%"></i><span>${x.l}회</span></div>`).join("")}
-  <h2>안전하고 투명한 이용 규칙</h2><ul class="rules"><li>파손·분실은 대여 전후 사진을 양쪽이 확인하고 기준에 따라 책임을 나눠요.</li><li>보증금은 새 제품 2만 원 이하 면제, 그 이상은 상태별 10~30%예요.</li><li>개인정보는 거래에 꼭 필요한 정보만 받아요.</li><li>신고·차단으로 부적절한 이용자를 제한해요.</li><li>AI 추천은 이유를 보여 주는 참고용이고, 결정은 사용자가 해요.</li></ul>`;
+  <h2>안전하고 투명한 이용 규칙</h2><ul class="rules"><li>파손·분실은 대여 전후 사진을 양쪽이 확인하고 기준에 따라 책임을 나눠요.</li><li>보증금은 받지 않아요. 대여 전 사진과 반납 확인 기록으로 상태를 확인해요.</li><li>파손 기준: 사용 흔적은 책임 없음, 일부 파손·부품 분실은 수리비나 부품값, 못 쓰게 됐거나 분실하면 중고 시세 기준으로 협의해요.</li><li>합의가 안 되면 사진과 채팅 기록을 근거로 운영자가 중재하고, 만 14세 미만은 보호자가 함께해요.</li><li>개인정보는 거래에 꼭 필요한 정보만 받아요.</li><li>신고·차단으로 부적절한 이용자를 제한해요.</li><li>AI 추천은 이유를 보여 주는 참고용이고, 결정은 사용자가 해요.</li></ul>`;
   $("#saved").textContent="탄소 절감량은 임시 예시 계수로 계산한 값이며, 환경성적표지 등 공개 자료로 교체할 예정이에요.";
 }
 
@@ -862,8 +891,9 @@ function renderChat(){
   if(t.u&&t.uid)markRead(t.uid);
   t.u=0;badge();
   const risk=t.m.slice(-2).some(x=>x[0]==="them"&&RISK.test(x[1]));
-  o.innerHTML=`<div class="chathd"><button class="btn sm ghost" id="back" aria-label="채팅 목록으로">목록</button><b>${esc(t.name)}님</b><button class="btn sm alt" id="rvChat" style="margin-left:auto">후기</button><button class="btn sm line" id="rp">신고·차단</button></div>
-  ${risk?`<div class="empty" style="margin-top:12px"><b>안전 알림</b>앱 밖 송금이나 링크 요청은 사기일 수 있어요. 보증금과 거래는 앱 안에서만 진행하세요.</div>`:""}
+  o.innerHTML=`<div class="chathd"><button class="btn sm ghost" id="back" aria-label="채팅 목록으로">목록</button><b>${esc(t.name)}님</b><button class="btn sm line" id="rp" style="margin-left:auto">신고·차단</button></div>
+  <div class="chatact"><button class="btn sm line" id="retChat">반납 확인</button><button class="btn sm alt" id="rvChat">후기 쓰기</button></div>
+  ${risk?`<div class="empty" style="margin-top:12px"><b>안전 알림</b>앱 밖 송금이나 링크 요청은 사기일 수 있어요. 이 앱은 보증금을 받지 않아요. 돈을 먼저 보내지 마세요.</div>`:""}
   <div class="msgs" id="msgs">${t.m.length?t.m.map(x=>`<div class="m ${x[0]}">${esc(x[1])}</div>`).join(""):'<p class="hint">첫 메시지를 보내 보세요.</p>'}</div>
   <div class="send"><label for="ci" style="position:absolute;left:-9999px">메시지</label><input id="ci" placeholder="메시지 입력" maxlength="500" autocomplete="off"><button class="btn" id="cs">보내기</button></div>
   <p class="hint">${t.sample?"예시 이웃이라 답장이 오지 않아요. 실제 이웃과는 서버에 연결한 뒤 대화할 수 있어요.":"이웃과 주고받는 실제 대화예요. 계좌번호·주소 같은 개인정보는 보내지 마세요."}</p>`;
@@ -885,6 +915,9 @@ $("#chatOut").onclick=e=>{
   if(id==="back"){cur=null;renderChat()}
   if(id==="cs")send();
   if(id==="rp")reportBlock();
+  if(id==="retChat"){const t=threads[cur];if(!t)return;const h=hist.find(x=>x.who===t.name&&x.type==="빌려줌"&&!x.ret)||hist.find(x=>x.who===t.name&&!x.ret);let it=h?h.item:"";
+    if(!it)for(let k=t.m.length-1;k>=0;k--){const q=/"([^"]{1,40})"/.exec(t.m[k][1]||"");if(q){it=q[1];break}}
+    openReturn({i:h?hist.indexOf(h):null,who:t.name,uid:t.uid,item:it});return}
   if(id==="rvChat"){const t=threads[cur];if(!t)return;const h=hist.find(x=>x.who===t.name&&!x.rv);openReview({i:h?hist.indexOf(h):null,who:t.name,uid:t.uid,item:h?h.item:"",type:h?h.type:"거래"})}
 };
 $("#chatOut").onkeydown=e=>{if(e.key==="Enter"&&e.target.id==="ci"&&!e.isComposing)send()};
@@ -911,7 +944,8 @@ function renderMe(){
   <label style="margin-top:18px">나눔 온도 ${temp}°</label><div class="temp"><i style="width:${Math.min(100,(temp-30)*3)}%"></i></div></div>
   <div class="stats"><div><b>${c("빌림")+c("나눔")}</b>빌린·나눔받은 물건</div><div><b>${c("빌려줌")}</b>빌려준 물건</div><div><b>${c("교환")}</b>교환</div></div>
   <div class="res top"><b>새 물건 ${saved}개를 사지 않았어요.</b><div class="meta">추정 ${co}kg CO₂e 절감 (예시 계수, 공개 자료로 교체 예정)</div></div>
-  <h2>내 거래 내역</h2>${hist.length?hist.map((h,i)=>`<div class="res"><h3><span>${esc(h.item)}</span><span class="tag">${esc(h.type)}</span></h3><div class="meta">${esc(h.who)}님과 거래</div>
+  <h2>내 거래 내역</h2>${hist.forEach(retFromChat),""}${hist.length?hist.map((h,i)=>`<div class="res"><h3><span>${esc(h.item)}</span><span class="tag">${esc(h.type)}</span></h3><div class="meta">${esc(h.who)}님과 거래</div>
+  ${h.ret?`<div style="margin:0 0 8px"><span class="tag ${h.ret==="part"||h.ret==="broken"?"warn":""}">반납 확인 · ${RET_SHORT[h.ret]}</span></div>`:(h.type==="빌려줌"?`<button class="btn sm line" data-ret="${i}" style="margin:0 6px 8px 0">반납 확인</button>`:"")}
   ${h.rv?`<div>${stars5(h.rv.s)}${(h.rv.tags||[]).map(x=>`<span class="tag">${esc(x)}</span>`).join("")}</div>${h.rv.t?`<p class="rvbody">${esc(h.rv.t)}</p>`:""}<p class="hint" style="margin-top:6px">내가 남긴 후기예요</p>`:`<button class="btn sm alt" data-rv="${i}">후기 쓰기</button>`}</div>`).join(""):`<p class="hint">아직 거래가 없어요. 빌리기 탭에서 이웃의 물건을 찾아보세요.</p>`}
   <h2>내가 등록한 물건</h2>${mine.length?mine.map(i=>`<div class="res"><b>${esc(i.n)}</b><div class="meta">${i.q}개 · 하루 ${won(i.p)} · 상태 ${i.c}</div></div>`).join(""):`<p class="hint">아직 없어요. 빌려주기 탭에서 등록해 보세요.</p>`}
   <h2>받은 후기</h2>${rvSummary()}${got.map(g=>`<div class="res"><div>${stars5(g.s)}${(g.tags||[]).map(x=>`<span class="tag">${esc(x)}</span>`).join("")}</div>${g.t?`<p class="rvbody">${esc(g.t)}</p>`:""}<div class="meta" style="margin:6px 0 0">${esc(g.who)}님${g.at?" · "+esc(g.at):""}</div></div>`).join("")}`;
@@ -922,6 +956,7 @@ $("#meOut").oninput=e=>{if(e.target.id==="mn")me.name=e.target.value;if(e.target
 $("#townBtn").onclick=()=>{const b=document.querySelector('nav button[data-t="me"]');if(b)b.click()};
 $("#meOut").onclick=e=>{
   if(e.target.id==="geoMe"){geo(function(la,ln){setMyPos(la,ln);drawMap($("#meMap"),me.pos,[],setMyPos)});return}
+  const ri=e.target.dataset.ret;if(ri!==undefined){const hr=hist[+ri];if(hr)openReturn({i:+ri,who:hr.who,uid:hr.uid||null,item:hr.item});return}
   const i=e.target.dataset.rv;if(i===undefined)return;
   const h=hist[+i];if(h)openReview({i:+i,who:h.who,uid:h.uid||null,item:h.item,type:h.type});
 };
@@ -931,6 +966,49 @@ function rvSummary(){
   got.forEach(g=>(g.tags||[]).forEach(x=>tc[x]=(tc[x]||0)+1));
   const top=Object.entries(tc).sort((a,b)=>b[1]-a[1]).slice(0,3);
   return `<div class="res rvsum"><div class="big">★ ${avg.toFixed(1)}<small> / 5</small></div><div><b>후기 ${got.length}개</b><div style="margin-top:4px">${top.map(([k,n])=>`<span class="tag">${esc(k)} ${n}</span>`).join("")}</div></div></div>`;
+}
+
+/* 반납 확인: 보증금 대신 상태를 기록으로 남겨요 */
+const RET_SHORT={ok:"이상 없음",wear:"사용 흔적 (책임 없음)",part:"일부 파손·부품 분실",broken:"못 쓰게 됨·분실"};
+const RET_GUIDE={
+  ok:"좋아요! 이웃에게 후기를 남겨 주세요.",
+  wear:"정상적으로 쓰면서 생긴 흔적은 빌린 사람 책임이 아니에요. 후기를 남겨 주세요.",
+  part:"대여 전·반납 후 사진을 채팅으로 주고받고, <b>수리비나 부품값</b>을 협의해 주세요. 합의가 안 되면 '신고·차단'으로 운영자 중재를 요청할 수 있어요.",
+  broken:"<b>중고 시세</b>(새 제품 가격이 아니에요)를 기준으로 협의해 주세요. 사진과 채팅 기록이 근거가 돼요. 합의가 안 되면 '신고·차단'으로 운영자 중재를 요청하고, 만 14세 미만이면 보호자와 함께해요."};
+let retCtx=null,retR="",retLast=null;
+function retFromChat(h){
+  if(h.ret)return;const t=threads[h.uid||"s:"+h.who];if(!t||!t.m)return;
+  const pre="[반납 확인] "+h.item+" · ";
+  for(let k=t.m.length-1;k>=0;k--){const x=t.m[k];if(x[0]==="me"&&typeof x[1]==="string"&&x[1].indexOf(pre)===0){const rest=x[1].slice(pre.length);for(const r in RET_SHORT)if(rest.indexOf(RET_SHORT[r])===0){h.ret=r;return}}}
+}
+function retDraw(){
+  document.querySelectorAll("#retOpts [data-r]").forEach(b=>b.setAttribute("aria-checked",String(b.dataset.r===retR)));
+  const g=$("#retGuide");g.hidden=!retR;g.innerHTML=retR?RET_GUIDE[retR]:"";
+}
+function openReturn(c){
+  retCtx=c;retR="";retLast=document.activeElement;
+  $("#retTitle").textContent=c.who+"님에게서 돌려받은 물건은 괜찮나요?";$("#retItem").value=c.item||"";$("#retNote").value="";$("#retErr").textContent="";
+  retDraw();$("#retSheet").hidden=false;document.body.style.overflow="hidden";
+  setTimeout(()=>{const b=document.querySelector("#retOpts button");if(b)b.focus()},60);
+}
+function closeReturn(){$("#retSheet").hidden=true;document.body.style.overflow="";retCtx=null;try{if(retLast&&retLast.isConnected)retLast.focus()}catch(e){}}
+$("#retSheet").onclick=e=>{
+  if(e.target.closest("[data-close]")){closeReturn();return}
+  const b=e.target.closest("[data-r]");if(b){retR=b.dataset.r;$("#retErr").textContent="";retDraw();return}
+  if(e.target.id==="retSend")sendReturn();
+};
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("#retSheet").hidden)closeReturn()});
+async function sendReturn(){
+  const c=retCtx;if(!c)return;const er=$("#retErr");
+  if(!retR){er.textContent="반납 상태를 골라 주세요.";return}
+  const item=$("#retItem").value.trim().slice(0,60)||"물건",note=$("#retNote").value.trim().slice(0,150),r=retR;
+  const msg="[반납 확인] "+item+" · "+RET_SHORT[r]+(note?" · "+note:"");
+  const ok=await say(c.uid||null,c.who,msg);if(ok===false)return;
+  const h=c.i!=null&&hist[c.i]?hist[c.i]:hist.find(x=>x.who===c.who&&!x.ret);
+  if(h){h.ret=r;if(!h.item||h.item==="물건")h.item=item}else hist.unshift({type:"빌려줌",item:item,who:c.who,uid:c.uid||null,co:0,rv:null,ret:r});
+  closeReturn();if(shown("me"))renderMe();
+  if(r==="ok"||r==="wear"){toast("반납 확인을 남겼어요. 후기도 남겨 주세요");const hh=h||hist[0];setTimeout(()=>openReview({i:hist.indexOf(hh),who:c.who,uid:c.uid||null,item:item,type:hh.type||"빌려줌"}),450)}
+  else toast("기록을 남겼어요. 채팅에서 사진을 주고받으며 협의해 주세요");
 }
 
 /* 후기 작성 */
@@ -1088,7 +1166,7 @@ async function dbItem(it){
 }
 function dbDeal(it){
   if(!DB||!me.id||!it.db||it.ownerId===me.id)return;
-  sb.from("deals").insert({kind:it.p?"빌림":"나눔",item_id:it.id,lender_id:it.ownerId,borrower_id:me.id,days:+$("#days").value||1,deposit:it.v<=20000?0:Math.round(it.v*DEP[it.c])}).then(function(r){if(r.error)toast("거래 저장에 실패했어요")});
+  sb.from("deals").insert({kind:it.p?"빌림":"나눔",item_id:it.id,lender_id:it.ownerId,borrower_id:me.id,days:+$("#days").value||1,deposit:0}).then(function(r){if(r.error)toast("거래 저장에 실패했어요")});
 }
 async function nicks(ids){
   const m={};if(!ids.length)return m;
