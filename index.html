@@ -692,7 +692,7 @@ function renderFeeds(){
     return `<div class="res"><h3><span>${esc(it.n)}</span>${mine?'<span class="tag">내 물건</span>':""}</h3>
     <div class="meta">${mine?"내가 올린 물건":esc(it.o)+"님"+rateOf(it)}${it.sample?" (예시)":""} · ${distTxt(it)} · 상태 ${esc(it.c)} · ${it.q}개${it.at?" · "+ago(it.at):""}</div>
     <span class="tag">${it.p?"하루 "+won(it.p):"나눔(무료)"}</span><span class="tag s">보증금 없음</span>
-    ${mine?"":`<div style="margin-top:10px"><button class="btn sm" data-ask="${i}">대여 신청</button></div>`}</div>`}).join(""):`<div class="empty"><b>아직 올라온 물건이 없어요.</b>빌려주기 탭에서 첫 물건을 올려 보세요.</div>`);
+    <div style="margin-top:10px">${mine?`<button class="btn sm line" data-del="${i}">내리기</button>`:`<button class="btn sm" data-ask="${i}">대여 신청</button>`}</div></div>`}).join(""):`<div class="empty"><b>아직 올라온 물건이 없어요.</b>빌려주기 탭에서 첫 물건을 올려 보세요.</div>`);
   const rq=reqs.filter(r=>server()?(r.db||r.who==="나"):true).sort(byNew).slice(0,30);
   fr.innerHTML=feedHead("이웃이 찾는 물건")+demoNote()+(rq.length?rq.map(r=>{const i=reqs.indexOf(r),mine=r.who==="나";
     return `<div class="res"><h3><span>${esc(r.n)}</span>${mine?'<span class="tag">내 요청</span>':""}</h3>
@@ -716,7 +716,19 @@ function askItem(i){
   if(it.o==="나"||(it.ownerId&&me.id&&it.ownerId===me.id)){toast("내가 등록한 물건이에요");return}
   it.l++;dbDeal(it);deal(it.p?"빌림":"나눔",it.n,it.o,it.co,it.db?it.ownerId:null);say(it.db?it.ownerId:null,it.o,`안녕하세요! "${it.n}" 빌리고 싶어요.`);toast(`${it.o}님께 신청했어요. 채팅에서 이어가세요`);
 }
-$("#feedItems").onclick=e=>{const a=e.target.dataset;if(a.refresh!==undefined)refreshCurrent(true);if(a.ask!==undefined)askItem(+a.ask)};
+$("#feedItems").onclick=e=>{const a=e.target.dataset;if(a.refresh!==undefined)refreshCurrent(true);if(a.ask!==undefined)askItem(+a.ask);if(a.del!==undefined)takeDown(+a.del,e.target)};
+/* 내 물건 내리기: 잘못 올렸거나 두 번 올라간 글을 정리해요 */
+async function takeDown(i,btn){
+  const it=items[i];if(!it||it.o!=="나")return;
+  if(!confirm("'"+it.n+"'을(를) 목록에서 내릴까요?"))return;
+  if(server()&&it.db&&it.id){
+    btn.disabled=true;
+    try{const r=await sb.from("items").update({status:"closed"}).eq("id",it.id).eq("owner_id",me.id);
+      if(r.error){toast("내리지 못했어요: "+dbErr(r.error).slice(0,60));btn.disabled=false;return}}
+    catch(x){toast("서버에 연결하지 못했어요");btn.disabled=false;return}
+  }
+  const k=items.indexOf(it);if(k>=0)items.splice(k,1);renderFeeds();toast("물건을 내렸어요");
+};
 $("#feedReqs").onclick=e=>{const a=e.target.dataset;if(a.refresh!==undefined){refreshCurrent(true);return}if(a.lendto===undefined)return;
   const r=reqs[+a.lendto];if(!r||r.who==="나")return;deal("빌려줌",r.n,r.who,0,r.uid||null);say(r.uid||null,r.who,`"${r.n}" 빌려드릴 수 있어요!`);toast(r.who+"님에게 연락했어요. 채팅에서 이어가세요");e.target.disabled=true;e.target.textContent="연락함"};
 $("#feedSwaps").onclick=e=>{const a=e.target.dataset;if(a.refresh!==undefined){refreshCurrent(true);return}if(a.swapto===undefined)return;
@@ -781,7 +793,9 @@ $("#lph").onchange=e=>{
 $("#goLend").onclick=()=>{
   const n=$("#ln").value.trim();
   if(!n){toast("빌려줄 물건 이름을 입력해 주세요");return}
-  const it={at:new Date().toISOString(),n,t:"",o:"나",d:0.1,lat:me.pos.lat,lng:me.pos.lng,co:5,p:+$("#lp").value||0,v:+$("#lv").value||0,c:$("#lc").value,q:+$("#lq").value||1,l:0};
+  const gb=$("#goLend");if(gb.disabled)return;gb.disabled=true;setTimeout(()=>{gb.disabled=false},2000);
+  if(items.some(x=>x.o==="나"&&x.n===n&&x.t0&&Date.now()-x.t0<15000)){toast("방금 같은 물건을 등록했어요");return}
+  const it={at:new Date().toISOString(),t0:Date.now(),n,t:"",o:"나",d:0.1,lat:me.pos.lat,lng:me.pos.lng,co:5,p:+$("#lp").value||0,v:+$("#lv").value||0,c:$("#lc").value,q:+$("#lq").value||1,l:0};
   items.push(it);dbItem(it);
   const idx=log.push({n,c:it.c,before:lastPhoto,after:null})-1;
   const m=reqs.filter(r=>!r.mine&&r.who!=="나").map(r=>({r,s:sim(clean(r.n),n)})).filter(x=>x.s>0).sort((a,b)=>b.s-a.s);
